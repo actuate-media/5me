@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Input, Select, Modal, Badge } from '@/components/ui';
 import { 
   Plus, 
@@ -14,76 +14,19 @@ import {
   Code,
   Palette,
   LayoutGrid,
-  Star
+  Star,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ReviewWidget, WidgetSettings } from '@/types';
 
-// Mock data
-const mockWidgets: ReviewWidget[] = [
-  {
-    id: '1',
-    companyId: '1',
-    name: 'Homepage Carousel',
-    type: 'carousel',
-    settings: {
-      theme: 'light',
-      primaryColor: '#4F46E5',
-      showRating: true,
-      showDate: true,
-      showSource: true,
-      minRating: 4,
-      maxReviews: 10,
-      autoRotate: true,
-      rotateInterval: 5,
-    },
-    embedCode: '<script src="https://5me.io/widget/1.js"></script>',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    companyId: '1',
-    name: 'Footer Badge',
-    type: 'badge',
-    settings: {
-      theme: 'dark',
-      primaryColor: '#4F46E5',
-      showRating: true,
-      showDate: false,
-      showSource: false,
-      minRating: 4,
-      maxReviews: 1,
-      autoRotate: false,
-      rotateInterval: 5,
-    },
-    embedCode: '<script src="https://5me.io/widget/2.js"></script>',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    companyId: '2',
-    name: 'Reviews Grid',
-    type: 'grid',
-    settings: {
-      theme: 'light',
-      primaryColor: '#059669',
-      showRating: true,
-      showDate: true,
-      showSource: true,
-      minRating: 3,
-      maxReviews: 6,
-      autoRotate: false,
-      rotateInterval: 5,
-    },
-    embedCode: '<script src="https://5me.io/widget/3.js"></script>',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
 const widgetTypeConfig = {
+  CAROUSEL: { label: 'Carousel', icon: '🎠', description: 'Rotating reviews slider' },
+  GRID: { label: 'Grid', icon: '⊞', description: 'Grid layout of reviews' },
+  LIST: { label: 'List', icon: '☰', description: 'Vertical list of reviews' },
+  BADGE: { label: 'Badge', icon: '🏷️', description: 'Compact rating badge' },
+  SLIDER: { label: 'Slider', icon: '↔️', description: 'Horizontal scrolling slider' },
+  // Also support lowercase for backward compatibility
   carousel: { label: 'Carousel', icon: '🎠', description: 'Rotating reviews slider' },
   grid: { label: 'Grid', icon: '⊞', description: 'Grid layout of reviews' },
   list: { label: 'List', icon: '☰', description: 'Vertical list of reviews' },
@@ -92,12 +35,75 @@ const widgetTypeConfig = {
 };
 
 export default function WidgetsPage() {
-  const [widgets] = useState(mockWidgets);
+  const [widgets, setWidgets] = useState<ReviewWidget[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingWidget, setEditingWidget] = useState<ReviewWidget | null>(null);
   const [previewWidget, setPreviewWidget] = useState<ReviewWidget | null>(null);
   const [embedWidget, setEmbedWidget] = useState<ReviewWidget | null>(null);
+
+  const fetchWidgets = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/widgets');
+      if (!res.ok) throw new Error('Failed to fetch widgets');
+      const data = await res.json();
+      setWidgets(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchWidgets();
+  }, [fetchWidgets]);
+
+  const handleCreateWidget = async (data: Partial<ReviewWidget>) => {
+    try {
+      const res = await fetch('/api/widgets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to create widget');
+      await fetchWidgets();
+      setIsCreateModalOpen(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to create widget');
+    }
+  };
+
+  const handleUpdateWidget = async (data: Partial<ReviewWidget>) => {
+    if (!editingWidget) return;
+    try {
+      const res = await fetch(`/api/widgets/${editingWidget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to update widget');
+      await fetchWidgets();
+      setEditingWidget(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update widget');
+    }
+  };
+
+  const handleDeleteWidget = async (widgetId: string) => {
+    if (!confirm('Are you sure you want to delete this widget?')) return;
+    try {
+      const res = await fetch(`/api/widgets/${widgetId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete widget');
+      await fetchWidgets();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete widget');
+    }
+  };
 
   const filteredWidgets = widgets.filter(widget =>
     widget.name.toLowerCase().includes(search.toLowerCase())
@@ -129,19 +135,37 @@ export default function WidgetsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredWidgets.map((widget) => (
-          <WidgetCard 
-            key={widget.id} 
-            widget={widget}
-            onEdit={() => setEditingWidget(widget)}
-            onPreview={() => setPreviewWidget(widget)}
-            onEmbed={() => setEmbedWidget(widget)}
-          />
-        ))}
-      </div>
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+        </div>
+      )}
 
-      {filteredWidgets.length === 0 && (
+      {error && (
+        <div className="text-center py-12">
+          <p className="text-red-600">{error}</p>
+          <Button onClick={fetchWidgets} variant="outline" className="mt-4">
+            Try Again
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && !error && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredWidgets.map((widget) => (
+            <WidgetCard 
+              key={widget.id} 
+              widget={widget}
+              onEdit={() => setEditingWidget(widget)}
+              onPreview={() => setPreviewWidget(widget)}
+              onEmbed={() => setEmbedWidget(widget)}
+              onDelete={() => handleDeleteWidget(widget.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && !error && filteredWidgets.length === 0 && (
         <div className="text-center py-12">
           <LayoutGrid className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900">No widgets found</h3>
@@ -161,10 +185,7 @@ export default function WidgetsPage() {
         size="xl"
       >
         <WidgetForm
-          onSubmit={(data) => {
-            console.log('Create widget:', data);
-            setIsCreateModalOpen(false);
-          }}
+          onSubmit={handleCreateWidget}
           onCancel={() => setIsCreateModalOpen(false)}
         />
       </Modal>
@@ -179,10 +200,7 @@ export default function WidgetsPage() {
         {editingWidget && (
           <WidgetForm
             widget={editingWidget}
-            onSubmit={(data) => {
-              console.log('Update widget:', data);
-              setEditingWidget(null);
-            }}
+            onSubmit={handleUpdateWidget}
             onCancel={() => setEditingWidget(null)}
           />
         )}
@@ -215,15 +233,22 @@ function WidgetCard({
   widget,
   onEdit,
   onPreview,
-  onEmbed
+  onEmbed,
+  onDelete
 }: { 
   widget: ReviewWidget;
   onEdit: () => void;
   onPreview: () => void;
   onEmbed: () => void;
+  onDelete: () => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
-  const config = widgetTypeConfig[widget.type];
+  const config = widgetTypeConfig[widget.type as keyof typeof widgetTypeConfig] || widgetTypeConfig.carousel;
+
+  // Handle settings that might be stored as JSON string
+  const settings = typeof widget.settings === 'string' 
+    ? JSON.parse(widget.settings) 
+    : (widget.settings || { theme: 'light', minRating: 4, maxReviews: 10 });
 
   return (
     <Card className="p-6 relative">
@@ -265,7 +290,10 @@ function WidgetCard({
                 <Code className="h-4 w-4" /> Get Code
               </button>
               <hr className="my-1" />
-              <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+              <button 
+                onClick={() => { onDelete(); setShowMenu(false); }}
+                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+              >
                 <Trash2 className="h-4 w-4" /> Delete
               </button>
             </div>
@@ -274,14 +302,14 @@ function WidgetCard({
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        <Badge variant={widget.settings.theme === 'dark' ? 'default' : 'info'}>
-          {widget.settings.theme} theme
+        <Badge variant={settings.theme === 'dark' ? 'default' : 'info'}>
+          {settings.theme || 'light'} theme
         </Badge>
         <Badge variant="success">
-          {widget.settings.minRating}+ stars
+          {settings.minRating || 4}+ stars
         </Badge>
         <Badge>
-          {widget.settings.maxReviews} reviews
+          {settings.maxReviews || 10} reviews
         </Badge>
       </div>
 

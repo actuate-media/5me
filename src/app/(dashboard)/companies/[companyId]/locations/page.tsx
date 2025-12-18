@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Card, Button, Input, Modal, Badge } from '@/components/ui';
 import { 
@@ -15,78 +15,120 @@ import {
   Globe,
   Building2,
   Copy,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Company, Location } from '@/types';
 
-// Mock data - replace with API call
-const mockCompany: Company & { locations: Location[] } = {
-  id: '1',
-  name: 'Actuate Media',
-  slug: 'actuate-media',
-  logo: undefined,
-  locationCount: 3,
-  sourceCount: 9,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  locations: [
-    {
-      id: '1',
-      companyId: '1',
-      name: 'Seattle HQ',
-      slug: 'seattle-hq',
-      address: '123 Main St',
-      city: 'Seattle',
-      state: 'WA',
-      zip: '98101',
-      phone: '(206) 555-1234',
-      sourceCount: 3,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      companyId: '1',
-      name: 'Portland Office',
-      slug: 'portland-office',
-      address: '456 Oak Ave',
-      city: 'Portland',
-      state: 'OR',
-      zip: '97201',
-      phone: '(503) 555-5678',
-      sourceCount: 3,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      companyId: '1',
-      name: 'San Francisco',
-      slug: 'san-francisco',
-      address: '789 Market St',
-      city: 'San Francisco',
-      state: 'CA',
-      zip: '94102',
-      phone: '(415) 555-9012',
-      sourceCount: 3,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-};
-
 export default function CompanyLocationsPage({ params }: { params: Promise<{ companyId: string }> }) {
   const { companyId } = use(params);
   const [search, setSearch] = useState('');
-  const [company] = useState<Company & { locations: Location[] }>(mockCompany);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
 
-  const filteredLocations = company.locations.filter(location =>
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [companyRes, locationsRes] = await Promise.all([
+        fetch(`/api/companies/${companyId}`),
+        fetch(`/api/companies/${companyId}/locations`)
+      ]);
+      
+      if (!companyRes.ok) throw new Error('Failed to fetch company');
+      if (!locationsRes.ok) throw new Error('Failed to fetch locations');
+      
+      const companyData = await companyRes.json();
+      const locationsData = await locationsRes.json();
+      
+      setCompany(companyData);
+      setLocations(locationsData);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [companyId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleCreateLocation = async (data: Partial<Location>) => {
+    try {
+      const res = await fetch(`/api/companies/${companyId}/locations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to create location');
+      }
+      await fetchData();
+      setIsAddModalOpen(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to create location');
+    }
+  };
+
+  const handleUpdateLocation = async (data: Partial<Location>) => {
+    if (!editingLocation) return;
+    try {
+      const res = await fetch(`/api/companies/${companyId}/locations/${editingLocation.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to update location');
+      await fetchData();
+      setEditingLocation(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update location');
+    }
+  };
+
+  const handleDeleteLocation = async (locationId: string) => {
+    if (!confirm('Are you sure you want to delete this location?')) return;
+    try {
+      const res = await fetch(`/api/companies/${companyId}/locations/${locationId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete location');
+      await fetchData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete location');
+    }
+  };
+
+  const filteredLocations = locations.filter(location =>
     location.name.toLowerCase().includes(search.toLowerCase()) ||
     location.city?.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !company) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600">{error || 'Company not found'}</p>
+        <Link href="/companies">
+          <Button variant="outline" className="mt-4">
+            Back to Companies
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -139,7 +181,9 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
             key={location.id} 
             location={location} 
             companySlug={company.slug}
+            companyId={companyId}
             onEdit={() => setEditingLocation(location)}
+            onDelete={() => handleDeleteLocation(location.id)}
           />
         ))}
       </div>
@@ -160,10 +204,7 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
         size="lg"
       >
         <LocationForm
-          onSubmit={(data) => {
-            console.log('Create location:', data);
-            setIsAddModalOpen(false);
-          }}
+          onSubmit={handleCreateLocation}
           onCancel={() => setIsAddModalOpen(false)}
         />
       </Modal>
@@ -178,10 +219,7 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
         {editingLocation && (
           <LocationForm
             location={editingLocation}
-            onSubmit={(data) => {
-              console.log('Update location:', data);
-              setEditingLocation(null);
-            }}
+            onSubmit={handleUpdateLocation}
             onCancel={() => setEditingLocation(null)}
           />
         )}
@@ -193,11 +231,15 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
 function LocationCard({ 
   location, 
   companySlug,
-  onEdit 
+  companyId,
+  onEdit,
+  onDelete
 }: { 
   location: Location; 
   companySlug: string;
+  companyId: string;
   onEdit: () => void;
+  onDelete: () => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -241,7 +283,10 @@ function LocationCard({
                 <ExternalLink className="h-4 w-4" /> Preview Review Page
               </a>
               <hr className="my-1" />
-              <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+              <button 
+                onClick={() => { onDelete(); setShowMenu(false); }}
+                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+              >
                 <Trash2 className="h-4 w-4" /> Delete
               </button>
             </div>
@@ -260,14 +305,14 @@ function LocationCard({
       )}
 
       <div className="flex items-center gap-2 mb-4">
-        <Badge variant={location.sourceCount > 0 ? 'success' : 'default'}>
-          {location.sourceCount} sources
+        <Badge variant={(location._count?.sources ?? location.sourceCount ?? 0) > 0 ? 'success' : 'default'}>
+          {location._count?.sources ?? location.sourceCount ?? 0} sources
         </Badge>
       </div>
 
       <div className="space-y-2">
         <Link
-          href={`/companies/${location.companyId}/locations/${location.id}`}
+          href={`/companies/${companyId}/locations/${location.id}`}
           className="block w-full text-center py-2 px-4 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
         >
           Manage Sources

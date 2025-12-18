@@ -24,10 +24,14 @@ export interface Company {
   name: string;
   slug: string;
   logo?: string;
-  locationCount: number;
-  sourceCount: number;
+  locationCount?: number;
+  sourceCount?: number;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    locations?: number;
+    users?: number;
+  };
 }
 
 // Location types
@@ -41,9 +45,14 @@ export interface Location {
   state?: string;
   zip?: string;
   phone?: string;
-  sourceCount: number;
+  sourceCount?: number;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    sources?: number;
+    clicks?: number;
+    feedback?: number;
+  };
 }
 
 // Review Source types

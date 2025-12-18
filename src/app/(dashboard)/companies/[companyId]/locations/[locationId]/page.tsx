@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Card, Button, Input, Select, Modal, Badge } from '@/components/ui';
 import { 
@@ -13,67 +13,34 @@ import {
   Globe,
   MapPin,
   Star,
-  MessageSquare
+  MessageSquare,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Location, ReviewSource, ReviewSourceType } from '@/types';
 
-// Source icons/colors
-const sourceConfig: Record<ReviewSourceType, { icon: string; color: string; bgColor: string }> = {
+// Source icons/colors - support both uppercase and lowercase
+const sourceConfig: Record<string, { icon: string; color: string; bgColor: string }> = {
   google: { icon: 'G', color: 'text-blue-600', bgColor: 'bg-blue-100' },
+  GOOGLE: { icon: 'G', color: 'text-blue-600', bgColor: 'bg-blue-100' },
   facebook: { icon: 'f', color: 'text-blue-700', bgColor: 'bg-blue-100' },
+  FACEBOOK: { icon: 'f', color: 'text-blue-700', bgColor: 'bg-blue-100' },
   yelp: { icon: 'Y', color: 'text-red-600', bgColor: 'bg-red-100' },
+  YELP: { icon: 'Y', color: 'text-red-600', bgColor: 'bg-red-100' },
   tripadvisor: { icon: 'T', color: 'text-green-600', bgColor: 'bg-green-100' },
+  TRIPADVISOR: { icon: 'T', color: 'text-green-600', bgColor: 'bg-green-100' },
   clutch: { icon: 'C', color: 'text-orange-600', bgColor: 'bg-orange-100' },
+  CLUTCH: { icon: 'C', color: 'text-orange-600', bgColor: 'bg-orange-100' },
   other: { icon: '★', color: 'text-gray-600', bgColor: 'bg-gray-100' },
+  OTHER: { icon: '★', color: 'text-gray-600', bgColor: 'bg-gray-100' },
 };
 
-// Mock data
-const mockLocation: Location & { sources: ReviewSource[]; companyName: string; companySlug: string } = {
-  id: '1',
-  companyId: '1',
-  name: 'Seattle HQ',
-  slug: 'seattle-hq',
-  address: '123 Main St',
-  city: 'Seattle',
-  state: 'WA',
-  zip: '98101',
-  phone: '(206) 555-1234',
-  sourceCount: 3,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  companyName: 'Actuate Media',
-  companySlug: 'actuate-media',
-  sources: [
-    {
-      id: '1',
-      locationId: '1',
-      type: 'google',
-      name: 'Google Business Profile',
-      url: 'https://g.page/actuatemedia/review',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      locationId: '1',
-      type: 'facebook',
-      name: 'Facebook Page',
-      url: 'https://facebook.com/actuatemedia/reviews',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      locationId: '1',
-      type: 'yelp',
-      name: 'Yelp',
-      url: 'https://yelp.com/biz/actuate-media-seattle',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-};
+interface LocationWithCompany extends Location {
+  company?: {
+    name: string;
+    slug: string;
+  };
+}
 
 export default function LocationSourcesPage({ 
   params 
@@ -81,9 +48,106 @@ export default function LocationSourcesPage({
   params: Promise<{ companyId: string; locationId: string }> 
 }) {
   const { companyId, locationId } = use(params);
-  const [location] = useState(mockLocation);
+  const [location, setLocation] = useState<LocationWithCompany | null>(null);
+  const [sources, setSources] = useState<ReviewSource[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingSource, setEditingSource] = useState<ReviewSource | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [locationRes, sourcesRes] = await Promise.all([
+        fetch(`/api/companies/${companyId}/locations/${locationId}`),
+        fetch(`/api/companies/${companyId}/locations/${locationId}/sources`)
+      ]);
+      
+      if (!locationRes.ok) throw new Error('Failed to fetch location');
+      if (!sourcesRes.ok) throw new Error('Failed to fetch sources');
+      
+      const locationData = await locationRes.json();
+      const sourcesData = await sourcesRes.json();
+      
+      setLocation(locationData);
+      setSources(sourcesData);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [companyId, locationId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleCreateSource = async (data: Partial<ReviewSource>) => {
+    try {
+      const res = await fetch(`/api/companies/${companyId}/locations/${locationId}/sources`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to create source');
+      await fetchData();
+      setIsAddModalOpen(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to create source');
+    }
+  };
+
+  const handleUpdateSource = async (data: Partial<ReviewSource>) => {
+    if (!editingSource) return;
+    try {
+      const res = await fetch(`/api/companies/${companyId}/locations/${locationId}/sources/${editingSource.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to update source');
+      await fetchData();
+      setEditingSource(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update source');
+    }
+  };
+
+  const handleDeleteSource = async (sourceId: string) => {
+    if (!confirm('Are you sure you want to delete this source?')) return;
+    try {
+      const res = await fetch(`/api/companies/${companyId}/locations/${locationId}/sources/${sourceId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete source');
+      await fetchData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete source');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !location) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600">{error || 'Location not found'}</p>
+        <Link href={`/companies/${companyId}/locations`}>
+          <Button variant="outline" className="mt-4">
+            Back to Locations
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const companyName = location.company?.name || 'Company';
+  const companySlug = location.company?.slug || '';
 
   return (
     <div>
@@ -93,7 +157,7 @@ export default function LocationSourcesPage({
           className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to {location.companyName} Locations
+          Back to {companyName} Locations
         </Link>
         
         <div className="flex items-center justify-between">
@@ -120,7 +184,7 @@ export default function LocationSourcesPage({
               Share this link with customers to collect reviews
             </p>
             <code className="bg-white/20 px-3 py-1.5 rounded text-sm">
-              {typeof window !== 'undefined' ? window.location.origin : ''}/reviews/{location.companySlug}/{location.slug}
+              {typeof window !== 'undefined' ? window.location.origin : ''}/reviews/{companySlug}/{location.slug}
             </code>
           </div>
           <div className="flex gap-2">
@@ -129,14 +193,14 @@ export default function LocationSourcesPage({
               className="border-white/30 text-white hover:bg-white/10"
               onClick={() => {
                 navigator.clipboard.writeText(
-                  `${typeof window !== 'undefined' ? window.location.origin : ''}/reviews/${location.companySlug}/${location.slug}`
+                  `${typeof window !== 'undefined' ? window.location.origin : ''}/reviews/${companySlug}/${location.slug}`
                 );
               }}
             >
               Copy Link
             </Button>
             <a
-              href={`/reviews/${location.companySlug}/${location.slug}`}
+              href={`/reviews/${companySlug}/${location.slug}`}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -156,7 +220,7 @@ export default function LocationSourcesPage({
               <Globe className="h-5 w-5 text-indigo-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{location.sources.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{sources.length}</p>
               <p className="text-sm text-gray-500">Review Sources</p>
             </div>
           </div>
@@ -167,7 +231,7 @@ export default function LocationSourcesPage({
               <Star className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">127</p>
+              <p className="text-2xl font-bold text-gray-900">--</p>
               <p className="text-sm text-gray-500">Total Clicks</p>
             </div>
           </div>
@@ -178,7 +242,7 @@ export default function LocationSourcesPage({
               <MessageSquare className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">8</p>
+              <p className="text-2xl font-bold text-gray-900">--</p>
               <p className="text-sm text-gray-500">Feedback Received</p>
             </div>
           </div>
@@ -188,16 +252,17 @@ export default function LocationSourcesPage({
       {/* Sources List */}
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Review Sources</h2>
       <div className="space-y-4">
-        {location.sources.map((source) => (
+        {sources.map((source) => (
           <SourceCard 
             key={source.id} 
             source={source}
             onEdit={() => setEditingSource(source)}
+            onDelete={() => handleDeleteSource(source.id)}
           />
         ))}
       </div>
 
-      {location.sources.length === 0 && (
+      {sources.length === 0 && (
         <Card className="p-12 text-center">
           <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900">No review sources</h3>
@@ -217,10 +282,7 @@ export default function LocationSourcesPage({
         size="md"
       >
         <SourceForm
-          onSubmit={(data) => {
-            console.log('Create source:', data);
-            setIsAddModalOpen(false);
-          }}
+          onSubmit={handleCreateSource}
           onCancel={() => setIsAddModalOpen(false)}
         />
       </Modal>
@@ -235,10 +297,7 @@ export default function LocationSourcesPage({
         {editingSource && (
           <SourceForm
             source={editingSource}
-            onSubmit={(data) => {
-              console.log('Update source:', data);
-              setEditingSource(null);
-            }}
+            onSubmit={handleUpdateSource}
             onCancel={() => setEditingSource(null)}
           />
         )}
@@ -249,13 +308,15 @@ export default function LocationSourcesPage({
 
 function SourceCard({ 
   source,
-  onEdit 
+  onEdit,
+  onDelete
 }: { 
   source: ReviewSource; 
   onEdit: () => void;
+  onDelete: () => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
-  const config = sourceConfig[source.type];
+  const config = sourceConfig[source.type] || sourceConfig.other;
 
   return (
     <Card className="p-4">
@@ -298,7 +359,10 @@ function SourceCard({
                 >
                   <Edit className="h-4 w-4" /> Edit
                 </button>
-                <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                <button 
+                  onClick={() => { onDelete(); setShowMenu(false); }}
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                >
                   <Trash2 className="h-4 w-4" /> Delete
                 </button>
               </div>

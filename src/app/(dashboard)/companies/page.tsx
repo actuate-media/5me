@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Card, Button, Input, Modal } from '@/components/ui';
 import { 
@@ -13,47 +13,83 @@ import {
   Trash2,
   MessageSquare,
   Settings,
-  Upload
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Company } from '@/types';
 
-// Mock data - replace with API call
-const mockCompanies: Company[] = [
-  { 
-    id: '1', 
-    name: 'Actuate Media', 
-    slug: 'actuate-media', 
-    locationCount: 3, 
-    sourceCount: 9,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  { 
-    id: '2', 
-    name: 'Seattle Coffee Co', 
-    slug: 'seattle-coffee-co', 
-    locationCount: 5, 
-    sourceCount: 15,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  { 
-    id: '3', 
-    name: 'Pacific Northwest Dental', 
-    slug: 'pacific-northwest-dental', 
-    locationCount: 2, 
-    sourceCount: 6,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
 export default function CompaniesPage() {
   const [search, setSearch] = useState('');
-  const [companies] = useState<Company[]>(mockCompanies);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+
+  const fetchCompanies = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/companies');
+      if (!res.ok) throw new Error('Failed to fetch companies');
+      const data = await res.json();
+      setCompanies(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCompanies();
+  }, [fetchCompanies]);
+
+  const handleCreateCompany = async (data: Partial<Company>) => {
+    try {
+      const res = await fetch('/api/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to create company');
+      }
+      await fetchCompanies();
+      setIsAddModalOpen(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to create company');
+    }
+  };
+
+  const handleUpdateCompany = async (data: Partial<Company>) => {
+    if (!editingCompany) return;
+    try {
+      const res = await fetch(`/api/companies/${editingCompany.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to update company');
+      await fetchCompanies();
+      setEditingCompany(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update company');
+    }
+  };
+
+  const handleDeleteCompany = async (companyId: string) => {
+    if (!confirm('Are you sure you want to delete this company?')) return;
+    try {
+      const res = await fetch(`/api/companies/${companyId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete company');
+      await fetchCompanies();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete company');
+    }
+  };
 
   const filteredCompanies = companies.filter(company =>
     company.name.toLowerCase().includes(search.toLowerCase())
@@ -85,17 +121,35 @@ export default function CompaniesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCompanies.map((company) => (
-          <CompanyCard 
-            key={company.id} 
-            company={company}
-            onEdit={() => setEditingCompany(company)}
-          />
-        ))}
-      </div>
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+        </div>
+      )}
 
-      {filteredCompanies.length === 0 && (
+      {error && (
+        <div className="text-center py-12">
+          <p className="text-red-600">{error}</p>
+          <Button onClick={fetchCompanies} variant="outline" className="mt-4">
+            Try Again
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && !error && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCompanies.map((company) => (
+            <CompanyCard 
+              key={company.id} 
+              company={company}
+              onEdit={() => setEditingCompany(company)}
+              onDelete={() => handleDeleteCompany(company.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && !error && filteredCompanies.length === 0 && (
         <div className="text-center py-12">
           <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900">No companies found</h3>
@@ -111,10 +165,7 @@ export default function CompaniesPage() {
         size="md"
       >
         <CompanyForm
-          onSubmit={(data) => {
-            console.log('Create company:', data);
-            setIsAddModalOpen(false);
-          }}
+          onSubmit={handleCreateCompany}
           onCancel={() => setIsAddModalOpen(false)}
         />
       </Modal>
@@ -129,10 +180,7 @@ export default function CompaniesPage() {
         {editingCompany && (
           <CompanyForm
             company={editingCompany}
-            onSubmit={(data) => {
-              console.log('Update company:', data);
-              setEditingCompany(null);
-            }}
+            onSubmit={handleUpdateCompany}
             onCancel={() => setEditingCompany(null)}
           />
         )}
@@ -141,7 +189,7 @@ export default function CompaniesPage() {
   );
 }
 
-function CompanyCard({ company, onEdit }: { company: Company; onEdit: () => void }) {
+function CompanyCard({ company, onEdit, onDelete }: { company: Company; onEdit: () => void; onDelete: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -185,7 +233,10 @@ function CompanyCard({ company, onEdit }: { company: Company; onEdit: () => void
                 <Settings className="h-4 w-4" /> Diagnostics
               </button>
               <hr className="my-1" />
-              <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+              <button 
+                onClick={() => { onDelete(); setShowMenu(false); }}
+                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+              >
                 <Trash2 className="h-4 w-4" /> Delete
               </button>
             </div>
@@ -196,13 +247,13 @@ function CompanyCard({ company, onEdit }: { company: Company; onEdit: () => void
       <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4" />
-          <span>{company.locationCount} locations</span>
+          <span>{company._count?.locations ?? company.locationCount ?? 0} locations</span>
         </div>
         <div className={cn(
           "px-2 py-0.5 rounded-full text-xs font-medium",
-          company.sourceCount > 0 ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+          (company._count?.locations ?? company.locationCount ?? 0) > 0 ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
         )}>
-          {company.sourceCount} sources
+          active
         </div>
       </div>
 

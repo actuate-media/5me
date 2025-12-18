@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Badge, Select, Modal, Textarea } from '@/components/ui';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui';
 import { 
@@ -15,107 +15,92 @@ import {
   Building2,
   MapPin,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import { cn, formatRelativeTime } from '@/lib/utils';
-import type { Feedback } from '@/types';
 
-// Mock data
-const mockFeedback: (Feedback & { companyName: string; locationName: string })[] = [
-  {
-    id: '1',
-    locationId: '1',
-    companyId: '1',
-    rating: 2,
-    name: 'John Smith',
-    email: 'john@example.com',
-    message: 'The service was slower than expected. Waited 30 minutes before being helped.',
-    status: 'new',
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    updatedAt: new Date().toISOString(),
-    companyName: 'Actuate Media',
-    locationName: 'Seattle HQ',
-  },
-  {
-    id: '2',
-    locationId: '2',
-    companyId: '1',
-    rating: 3,
-    name: 'Sarah Johnson',
-    email: 'sarah@example.com',
-    message: 'Product was okay but could be better. The packaging arrived damaged.',
-    status: 'read',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    updatedAt: new Date().toISOString(),
-    companyName: 'Actuate Media',
-    locationName: 'Portland Office',
-  },
-  {
-    id: '3',
-    locationId: '1',
-    companyId: '2',
-    rating: 1,
-    name: 'Mike Wilson',
-    email: 'mike@example.com',
-    message: 'Very disappointed with my experience. Staff was rude and unhelpful.',
-    status: 'new',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    updatedAt: new Date().toISOString(),
-    companyName: 'Seattle Coffee Co',
-    locationName: 'Downtown',
-  },
-  {
-    id: '4',
-    locationId: '3',
-    companyId: '1',
-    rating: 2,
-    name: 'Emily Brown',
-    email: 'emily@example.com',
-    message: 'Website was confusing and checkout process needs improvement.',
-    status: 'resolved',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    updatedAt: new Date().toISOString(),
-    companyName: 'Actuate Media',
-    locationName: 'San Francisco',
-  },
-  {
-    id: '5',
-    locationId: '1',
-    companyId: '3',
-    rating: 3,
-    name: 'David Lee',
-    email: 'david@example.com',
-    message: 'Average experience. Nothing special but nothing terrible either.',
-    status: 'read',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    updatedAt: new Date().toISOString(),
-    companyName: 'Pacific Northwest Dental',
-    locationName: 'Main Office',
-  },
-];
+interface FeedbackItem {
+  id: string;
+  locationId: string;
+  rating: number;
+  name: string;
+  email: string;
+  phone?: string | null;
+  message: string;
+  status: 'NEW' | 'READ' | 'RESOLVED';
+  createdAt: string;
+  updatedAt: string;
+  location?: {
+    name: string;
+    company: {
+      id: string;
+      name: string;
+    };
+  };
+}
 
 const statusConfig = {
-  new: { label: 'New', variant: 'error' as const },
-  read: { label: 'Read', variant: 'warning' as const },
-  resolved: { label: 'Resolved', variant: 'success' as const },
+  NEW: { label: 'New', variant: 'error' as const },
+  READ: { label: 'Read', variant: 'warning' as const },
+  RESOLVED: { label: 'Resolved', variant: 'success' as const },
 };
 
 export default function FeedbackPage() {
-  const [feedback] = useState(mockFeedback);
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedFeedback, setSelectedFeedback] = useState<typeof mockFeedback[0] | null>(null);
+  const [selectedFeedback, setSelectedFeedback] = useState<FeedbackItem | null>(null);
+
+  const fetchFeedback = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (search) params.set('search', search);
+      
+      const res = await fetch(`/api/feedback?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch feedback');
+      const data = await res.json();
+      setFeedback(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [statusFilter, search]);
+
+  useEffect(() => {
+    fetchFeedback();
+  }, [fetchFeedback]);
+
+  const handleUpdateStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/feedback/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error('Failed to update feedback');
+      await fetchFeedback();
+      setSelectedFeedback(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update');
+    }
+  };
 
   const filteredFeedback = feedback.filter(item => {
     const matchesSearch = 
       item.name.toLowerCase().includes(search.toLowerCase()) ||
       item.email.toLowerCase().includes(search.toLowerCase()) ||
       item.message.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
-  const newCount = feedback.filter(f => f.status === 'new').length;
+  const newCount = feedback.filter(f => f.status === 'NEW').length;
 
   return (
     <div>
@@ -164,7 +149,7 @@ export default function FeedbackPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">
-                {feedback.filter(f => f.status === 'read').length}
+                {feedback.filter(f => f.status === 'READ').length}
               </p>
               <p className="text-sm text-gray-500">Read</p>
             </div>
@@ -177,7 +162,7 @@ export default function FeedbackPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">
-                {feedback.filter(f => f.status === 'resolved').length}
+                {feedback.filter(f => f.status === 'RESOLVED').length}
               </p>
               <p className="text-sm text-gray-500">Resolved</p>
             </div>
@@ -203,14 +188,26 @@ export default function FeedbackPage() {
           className="w-40"
         >
           <option value="all">All Status</option>
-          <option value="new">New</option>
-          <option value="read">Read</option>
-          <option value="resolved">Resolved</option>
+          <option value="NEW">New</option>
+          <option value="READ">Read</option>
+          <option value="RESOLVED">Resolved</option>
         </Select>
       </div>
 
       {/* Table */}
       <Card>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-red-600">{error}</p>
+            <Button onClick={fetchFeedback} variant="outline" className="mt-4">
+              Try Again
+            </Button>
+          </div>
+        ) : (
         <Table>
           <TableHeader>
             <TableRow>
@@ -248,8 +245,8 @@ export default function FeedbackPage() {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <div>
-                      <p className="text-sm text-gray-900">{item.companyName}</p>
-                      <p className="text-xs text-gray-500">{item.locationName}</p>
+                      <p className="text-sm text-gray-900">{item.location?.company?.name || 'Unknown'}</p>
+                      <p className="text-xs text-gray-500">{item.location?.name || 'Unknown'}</p>
                     </div>
                   </div>
                 </TableCell>
@@ -257,8 +254,8 @@ export default function FeedbackPage() {
                   <p className="text-sm text-gray-600 max-w-xs truncate">{item.message}</p>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusConfig[item.status].variant}>
-                    {statusConfig[item.status].label}
+                  <Badge variant={statusConfig[item.status]?.variant || 'default'}>
+                    {statusConfig[item.status]?.label || item.status}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -279,8 +276,9 @@ export default function FeedbackPage() {
             ))}
           </TableBody>
         </Table>
+        )}
 
-        {filteredFeedback.length === 0 && (
+        {!isLoading && !error && filteredFeedback.length === 0 && (
           <div className="text-center py-12">
             <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900">No feedback found</h3>
@@ -314,6 +312,7 @@ export default function FeedbackPage() {
         {selectedFeedback && (
           <FeedbackDetail
             feedback={selectedFeedback}
+            onUpdateStatus={handleUpdateStatus}
             onClose={() => setSelectedFeedback(null)}
           />
         )}
@@ -324,9 +323,11 @@ export default function FeedbackPage() {
 
 function FeedbackDetail({ 
   feedback, 
+  onUpdateStatus,
   onClose 
 }: { 
-  feedback: typeof mockFeedback[0]; 
+  feedback: FeedbackItem; 
+  onUpdateStatus: (id: string, status: string) => void;
   onClose: () => void;
 }) {
   const [response, setResponse] = useState('');
@@ -341,8 +342,8 @@ function FeedbackDetail({
             {feedback.email}
           </a>
         </div>
-        <Badge variant={statusConfig[feedback.status].variant}>
-          {statusConfig[feedback.status].label}
+        <Badge variant={statusConfig[feedback.status]?.variant || 'default'}>
+          {statusConfig[feedback.status]?.label || feedback.status}
         </Badge>
       </div>
 
@@ -367,11 +368,11 @@ function FeedbackDetail({
       <div className="flex items-center gap-4 text-sm text-gray-600">
         <div className="flex items-center gap-1">
           <Building2 className="h-4 w-4" />
-          {feedback.companyName}
+          {feedback.location?.company?.name || 'Unknown'}
         </div>
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4" />
-          {feedback.locationName}
+          {feedback.location?.name || 'Unknown'}
         </div>
         <div className="flex items-center gap-1">
           <Calendar className="h-4 w-4" />
@@ -399,14 +400,22 @@ function FeedbackDetail({
       {/* Actions */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-200">
         <div className="flex items-center gap-2">
-          {feedback.status === 'new' && (
-            <Button variant="outline" size="sm">
+          {feedback.status === 'NEW' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onUpdateStatus(feedback.id, 'READ')}
+            >
               <Eye className="h-4 w-4 mr-1" />
               Mark as Read
             </Button>
           )}
-          {feedback.status !== 'resolved' && (
-            <Button variant="outline" size="sm">
+          {feedback.status !== 'RESOLVED' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onUpdateStatus(feedback.id, 'RESOLVED')}
+            >
               <Check className="h-4 w-4 mr-1" />
               Mark Resolved
             </Button>
