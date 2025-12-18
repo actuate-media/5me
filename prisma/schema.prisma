@@ -1,0 +1,195 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+// User roles enum
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  USER
+}
+
+// User model
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  firstName   String?
+  lastName    String?
+  role        UserRole  @default(USER)
+  avatar      String?
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  companies   CompanyUser[]
+  feedback    Feedback[]
+
+  @@map("users")
+}
+
+// Company model
+model Company {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  logo         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  users        CompanyUser[]
+  locations    Location[]
+  widgets      Widget[]
+
+  @@map("companies")
+}
+
+// Many-to-many relationship between users and companies
+model CompanyUser {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String
+  role      String   @default("member") // owner, admin, member
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@map("company_users")
+}
+
+// Location model
+model Location {
+  id        String   @id @default(cuid())
+  companyId String
+  name      String
+  slug      String
+  address   String?
+  city      String?
+  state     String?
+  zip       String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  company  Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sources  ReviewSource[]
+  clicks   ReviewClick[]
+  feedback Feedback[]
+
+  @@unique([companyId, slug])
+  @@map("locations")
+}
+
+// Review source types
+enum ReviewSourceType {
+  GOOGLE
+  FACEBOOK
+  YELP
+  TRIPADVISOR
+  CLUTCH
+  OTHER
+}
+
+// Review source model
+model ReviewSource {
+  id         String           @id @default(cuid())
+  locationId String
+  type       ReviewSourceType
+  name       String
+  url        String
+  icon       String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  // Relations
+  location Location      @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  clicks   ReviewClick[]
+
+  @@map("review_sources")
+}
+
+// Review click tracking
+model ReviewClick {
+  id         String   @id @default(cuid())
+  locationId String
+  sourceId   String
+  rating     Int?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  location Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  source   ReviewSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@map("review_clicks")
+}
+
+// Feedback status
+enum FeedbackStatus {
+  NEW
+  READ
+  RESOLVED
+}
+
+// Feedback model (internal reviews from low ratings)
+model Feedback {
+  id         String         @id @default(cuid())
+  locationId String
+  rating     Int
+  name       String
+  email      String
+  phone      String?
+  message    String
+  status     FeedbackStatus @default(NEW)
+  assignedTo String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  // Relations
+  location     Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  assignedUser User?    @relation(fields: [assignedTo], references: [id])
+
+  @@map("feedback")
+}
+
+// Widget types
+enum WidgetType {
+  CAROUSEL
+  GRID
+  LIST
+  BADGE
+  SLIDER
+}
+
+// Widget model
+model Widget {
+  id        String     @id @default(cuid())
+  companyId String
+  name      String
+  type      WidgetType
+  settings  Json
+  embedCode String?
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("widgets")
+}

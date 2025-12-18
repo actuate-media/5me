@@ -1,44 +1,47 @@
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
+import prisma from '@/lib/prisma';
 import type { UserRole } from '@/types';
 
 // Superadmin email (hardcoded)
 const SUPERADMIN_EMAIL = 'strategize@actuatemedia.com';
 
-// In-memory user store (replace with database later)
-// This will be populated when users sign in
-const userRoles: Record<string, UserRole> = {
-  [SUPERADMIN_EMAIL]: 'SUPERADMIN',
-};
-
-// Function to get or create user role
-function getUserRole(email: string): UserRole {
+// Function to get or create user and return role
+async function getOrCreateUserRole(email: string, name?: string | null, avatar?: string | null): Promise<UserRole> {
   const normalizedEmail = email.toLowerCase();
   
   // Superadmin is always superadmin
-  if (normalizedEmail === SUPERADMIN_EMAIL) {
-    return 'SUPERADMIN';
-  }
+  const role: UserRole = normalizedEmail === SUPERADMIN_EMAIL ? 'SUPERADMIN' : 'USER';
   
-  // Return stored role or default to USER
-  return userRoles[normalizedEmail] || 'USER';
-}
+  // Split name into first/last
+  const nameParts = name?.split(' ') || [];
+  const firstName = nameParts[0] || null;
+  const lastName = nameParts.slice(1).join(' ') || null;
 
-// Export function to update user role (for admin use)
-export function setUserRole(email: string, role: UserRole): void {
-  const normalizedEmail = email.toLowerCase();
-  
-  // Cannot change superadmin's role
-  if (normalizedEmail === SUPERADMIN_EMAIL) {
-    return;
-  }
-  
-  userRoles[normalizedEmail] = role;
-}
+  try {
+    const user = await prisma.user.upsert({
+      where: { email: normalizedEmail },
+      update: {
+        lastLoginAt: new Date(),
+        avatar: avatar || undefined,
+      },
+      create: {
+        email: normalizedEmail,
+        firstName,
+        lastName,
+        role,
+        avatar,
+        isActive: true,
+        lastLoginAt: new Date(),
+      },
+    });
 
-// Export function to get all users with roles
-export function getAllUserRoles(): Record<string, UserRole> {
-  return { ...userRoles };
+    return user.role as UserRole;
+  } catch (error) {
+    console.error('Database error in getOrCreateUserRole:', error);
+    // Fallback: return based on email check
+    return normalizedEmail === SUPERADMIN_EMAIL ? 'SUPERADMIN' : 'USER';
+  }
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -60,7 +63,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ account, profile }) {
       // Only allow users with @actuatemedia.com email
       if (account?.provider === 'google') {
-        return profile?.email?.endsWith('@actuatemedia.com') ?? false;
+        const isAllowed = profile?.email?.endsWith('@actuatemedia.com') ?? false;
+        
+        if (isAllowed && profile?.email) {
+          // Check if user is active in database
+          try {
+            const user = await prisma.user.findUnique({
+              where: { email: profile.email.toLowerCase() },
+              select: { isActive: true },
+            });
+            
+            // If user exists and is inactive, deny login
+            if (user && !user.isActive) {
+              return false;
+            }
+          } catch (error) {
+            console.error('Database error checking user status:', error);
+            // Allow login on DB error (fail open for new users)
+          }
+        }
+        
+        return isAllowed;
       }
       return true;
     },
@@ -72,17 +95,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, trigger }) {
       // Persist the OAuth access_token and role to the token
       if (account) {
         token.accessToken = account.access_token;
       }
       
-      // Set role based on email
-      if (profile?.email) {
-        token.role = getUserRole(profile.email);
-      } else if (token.email) {
-        token.role = getUserRole(token.email as string);
+      // On sign in, get/create user and fetch role from database
+      if (profile?.email && (account || trigger === 'signIn')) {
+        token.role = await getOrCreateUserRole(
+          profile.email, 
+          profile.name, 
+          profile.picture || profile.image
+        );
+      } else if (token.email && !token.role) {
+        // Fallback for existing sessions without role
+        token.role = token.email.toLowerCase() === SUPERADMIN_EMAIL ? 'SUPERADMIN' : 'USER';
       }
       
       return token;
