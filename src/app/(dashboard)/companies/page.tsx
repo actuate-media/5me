@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card, Button } from '@/components/ui';
+import { Card, Button, Input, Modal } from '@/components/ui';
 import { 
   Building2, 
   MapPin, 
@@ -12,7 +12,8 @@ import {
   Edit,
   Trash2,
   MessageSquare,
-  Settings
+  Settings,
+  Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Company } from '@/types';
@@ -51,6 +52,8 @@ const mockCompanies: Company[] = [
 export default function CompaniesPage() {
   const [search, setSearch] = useState('');
   const [companies] = useState<Company[]>(mockCompanies);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
 
   const filteredCompanies = companies.filter(company =>
     company.name.toLowerCase().includes(search.toLowerCase())
@@ -63,7 +66,7 @@ export default function CompaniesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Companies</h1>
           <p className="text-gray-600">Manage your companies and their locations</p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Company
         </Button>
@@ -84,7 +87,11 @@ export default function CompaniesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCompanies.map((company) => (
-          <CompanyCard key={company.id} company={company} />
+          <CompanyCard 
+            key={company.id} 
+            company={company}
+            onEdit={() => setEditingCompany(company)}
+          />
         ))}
       </div>
 
@@ -95,11 +102,46 @@ export default function CompaniesPage() {
           <p className="text-gray-500">Try adjusting your search or add a new company.</p>
         </div>
       )}
+
+      {/* Add Company Modal */}
+      <Modal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Add Company"
+        size="md"
+      >
+        <CompanyForm
+          onSubmit={(data) => {
+            console.log('Create company:', data);
+            setIsAddModalOpen(false);
+          }}
+          onCancel={() => setIsAddModalOpen(false)}
+        />
+      </Modal>
+
+      {/* Edit Company Modal */}
+      <Modal
+        isOpen={!!editingCompany}
+        onClose={() => setEditingCompany(null)}
+        title="Edit Company"
+        size="md"
+      >
+        {editingCompany && (
+          <CompanyForm
+            company={editingCompany}
+            onSubmit={(data) => {
+              console.log('Update company:', data);
+              setEditingCompany(null);
+            }}
+            onCancel={() => setEditingCompany(null)}
+          />
+        )}
+      </Modal>
     </div>
   );
 }
 
-function CompanyCard({ company }: { company: Company }) {
+function CompanyCard({ company, onEdit }: { company: Company; onEdit: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -127,12 +169,18 @@ function CompanyCard({ company }: { company: Company }) {
           </button>
           {showMenu && (
             <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 w-48">
-              <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+              <button 
+                onClick={() => { onEdit(); setShowMenu(false); }}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
                 <Edit className="h-4 w-4" /> Edit Company
               </button>
-              <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+              <Link 
+                href={`/feedback?company=${company.id}`}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
                 <MessageSquare className="h-4 w-4" /> View Feedback
-              </button>
+              </Link>
               <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                 <Settings className="h-4 w-4" /> Diagnostics
               </button>
@@ -165,5 +213,86 @@ function CompanyCard({ company }: { company: Company }) {
         Manage Locations
       </Link>
     </Card>
+  );
+}
+
+interface CompanyFormProps {
+  company?: Company;
+  onSubmit: (data: Partial<Company>) => void;
+  onCancel: () => void;
+}
+
+function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
+  const [formData, setFormData] = useState({
+    name: company?.name || '',
+    slug: company?.slug || '',
+    logo: company?.logo || '',
+  });
+
+  const handleNameChange = (name: string) => {
+    setFormData({
+      ...formData,
+      name,
+      slug: company ? formData.slug : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+    });
+  };
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(formData);
+      }}
+      className="space-y-4"
+    >
+      <Input
+        label="Company Name"
+        value={formData.name}
+        onChange={(e) => handleNameChange(e.target.value)}
+        placeholder="e.g., Actuate Media"
+        required
+      />
+      
+      <Input
+        label="Slug (URL-friendly name)"
+        value={formData.slug}
+        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+        placeholder="actuate-media"
+        required
+      />
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+          {formData.logo ? (
+            <div className="flex items-center justify-center gap-4">
+              <img src={formData.logo} alt="Logo" className="h-16 w-16 rounded-lg object-cover" />
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, logo: '' })}
+                className="text-sm text-red-600 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <div>
+              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
+              <p className="text-xs text-gray-400">PNG, JPG up to 2MB</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          {company ? 'Save Changes' : 'Create Company'}
+        </Button>
+      </div>
+    </form>
   );
 }
