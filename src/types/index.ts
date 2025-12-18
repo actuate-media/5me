@@ -1,14 +1,22 @@
+// User roles
+export type UserRole = 'SUPERADMIN' | 'ADMIN' | 'USER';
+
 // User types
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'admin' | 'manager' | 'user';
+  role: UserRole;
   avatar?: string;
+  isActive: boolean;
+  lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+// The superadmin email (hardcoded)
+export const SUPERADMIN_EMAIL = 'strategize@actuatemedia.com';
 
 // Company types
 export interface Company {

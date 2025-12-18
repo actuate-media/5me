@@ -1,5 +1,15 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/reviews/[companySlug]/[locationSlug]/page": "app/reviews/[companySlug]/[locationSlug]/page.js",
   "/login/page": "app/login/page.js",
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/reviews/[companySlug]/page": "app/reviews/[companySlug]/page.js",
+  "/(dashboard)/companies/[companyId]/locations/[locationId]/page": "app/(dashboard)/companies/[companyId]/locations/[locationId]/page.js",
+  "/(dashboard)/companies/page": "app/(dashboard)/companies/page.js",
+  "/(dashboard)/widgets/page": "app/(dashboard)/widgets/page.js",
+  "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
+  "/(dashboard)/settings/page": "app/(dashboard)/settings/page.js",
+  "/(dashboard)/companies/[companyId]/locations/page": "app/(dashboard)/companies/[companyId]/locations/page.js",
+  "/(dashboard)/feedback/page": "app/(dashboard)/feedback/page.js"
 }

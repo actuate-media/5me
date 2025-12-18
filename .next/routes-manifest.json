@@ -1,1 +1,132 @@
-{"version":3,"caseSensitive":false,"basePath":"","rewrites":{"beforeFiles":[],"afterFiles":[],"fallback":[]},"redirects":[{"source":"/:path+/","destination":"/:path+","permanent":true,"internal":true,"regex":"^(?:\\/((?:[^\\/]+?)(?:\\/(?:[^\\/]+?))*))\\/$"}],"headers":[]}
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/api/auth/[...nextauth]",
+      "regex": "^/api/auth/(.+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPnextauth": "nxtPnextauth"
+      },
+      "namedRegex": "^/api/auth/(?<nxtPnextauth>.+?)(?:/)?$"
+    },
+    {
+      "page": "/companies/[companyId]/locations",
+      "regex": "^/companies/([^/]+?)/locations(?:/)?$",
+      "routeKeys": {
+        "nxtPcompanyId": "nxtPcompanyId"
+      },
+      "namedRegex": "^/companies/(?<nxtPcompanyId>[^/]+?)/locations(?:/)?$"
+    },
+    {
+      "page": "/companies/[companyId]/locations/[locationId]",
+      "regex": "^/companies/([^/]+?)/locations/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPcompanyId": "nxtPcompanyId",
+        "nxtPlocationId": "nxtPlocationId"
+      },
+      "namedRegex": "^/companies/(?<nxtPcompanyId>[^/]+?)/locations/(?<nxtPlocationId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/reviews/[companySlug]",
+      "regex": "^/reviews/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPcompanySlug": "nxtPcompanySlug"
+      },
+      "namedRegex": "^/reviews/(?<nxtPcompanySlug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/reviews/[companySlug]/[locationSlug]",
+      "regex": "^/reviews/([^/]+?)/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPcompanySlug": "nxtPcompanySlug",
+        "nxtPlocationSlug": "nxtPlocationSlug"
+      },
+      "namedRegex": "^/reviews/(?<nxtPcompanySlug>[^/]+?)/(?<nxtPlocationSlug>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/companies",
+      "regex": "^/companies(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/companies(?:/)?$"
+    },
+    {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
+      "page": "/feedback",
+      "regex": "^/feedback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/feedback(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/settings",
+      "regex": "^/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/settings(?:/)?$"
+    },
+    {
+      "page": "/widgets",
+      "regex": "^/widgets(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/widgets(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

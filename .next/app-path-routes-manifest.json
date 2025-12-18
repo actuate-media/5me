@@ -1,13 +1,15 @@
 {
   "/_not-found/page": "/_not-found",
   "/api/auth/[...nextauth]/route": "/api/auth/[...nextauth]",
-  "/login/page": "/login",
-  "/reviews/[companySlug]/page": "/reviews/[companySlug]",
   "/reviews/[companySlug]/[locationSlug]/page": "/reviews/[companySlug]/[locationSlug]",
+  "/login/page": "/login",
   "/page": "/",
+  "/reviews/[companySlug]/page": "/reviews/[companySlug]",
+  "/(dashboard)/companies/[companyId]/locations/[locationId]/page": "/companies/[companyId]/locations/[locationId]",
   "/(dashboard)/companies/page": "/companies",
   "/(dashboard)/widgets/page": "/widgets",
+  "/(dashboard)/dashboard/page": "/dashboard",
   "/(dashboard)/settings/page": "/settings",
-  "/(dashboard)/feedback/page": "/feedback",
-  "/(dashboard)/dashboard/page": "/dashboard"
+  "/(dashboard)/companies/[companyId]/locations/page": "/companies/[companyId]/locations",
+  "/(dashboard)/feedback/page": "/feedback"
 }

@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/BradHolly/Actuate%20Media%20Dropbox/Brad%20Holly/Git%20Local/5me/src/app/providers.tsx"],"sourcesContent":["'use client';\r\n\r\nimport { QueryClient, QueryClientProvider } from '@tanstack/react-query';\r\nimport { SessionProvider } from 'next-auth/react';\r\nimport { useState } from 'react';\r\n\r\nexport function Providers({ children }: { children: React.ReactNode }) {\r\n  const [queryClient] = useState(\r\n    () =>\r\n      new QueryClient({\r\n        defaultOptions: {\r\n          queries: {\r\n            staleTime: 5 * 60 * 1000, // 5 minutes\r\n            retry: 1,\r\n          },\r\n        },\r\n      })\r\n  );\r\n\r\n  return (\r\n    <SessionProvider>\r\n      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>\r\n    </SessionProvider>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;AAEA;AAAA;AACA;AACA;AAJA;;;;;AAMO,SAAS,UAAU,EAAE,QAAQ,EAAiC;IACnE,MAAM,CAAC,YAAY,GAAG,IAAA,iNAAQ,EAC5B,IACE,IAAI,4LAAW,CAAC;YACd,gBAAgB;gBACd,SAAS;oBACP,WAAW,IAAI,KAAK;oBACpB,OAAO;gBACT;YACF;QACF;IAGJ,qBACE,8OAAC,wJAAe;kBACd,cAAA,8OAAC,6MAAmB;YAAC,QAAQ;sBAAc;;;;;;;;;;;AAGjD","debugId":null}}]
-}
