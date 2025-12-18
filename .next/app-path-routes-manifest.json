@@ -1,0 +1,13 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/auth/[...nextauth]/route": "/api/auth/[...nextauth]",
+  "/login/page": "/login",
+  "/reviews/[companySlug]/page": "/reviews/[companySlug]",
+  "/reviews/[companySlug]/[locationSlug]/page": "/reviews/[companySlug]/[locationSlug]",
+  "/page": "/",
+  "/(dashboard)/companies/page": "/companies",
+  "/(dashboard)/widgets/page": "/widgets",
+  "/(dashboard)/settings/page": "/settings",
+  "/(dashboard)/feedback/page": "/feedback",
+  "/(dashboard)/dashboard/page": "/dashboard"
+}
