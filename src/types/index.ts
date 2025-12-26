@@ -45,6 +45,8 @@ export interface Location {
   state?: string;
   zip?: string;
   phone?: string;
+  ratingThreshold: number; // Ratings at or above this show review platforms (default: 4)
+  notificationEmails: string[]; // Email addresses to notify on low-rating feedback
   sourceCount?: number;
   createdAt: string;
   updatedAt: string;

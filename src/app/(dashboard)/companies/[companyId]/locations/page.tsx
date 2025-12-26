@@ -16,7 +16,9 @@ import {
   Building2,
   Copy,
   Check,
-  Loader2
+  Loader2,
+  X,
+  Mail
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Company, Location } from '@/types';
@@ -353,13 +355,51 @@ function LocationForm({ location, onSubmit, onCancel }: LocationFormProps) {
     state: location?.state || '',
     zip: location?.zip || '',
     phone: location?.phone || '',
+    ratingThreshold: location?.ratingThreshold ?? 4,
+    notificationEmails: location?.notificationEmails || [],
   });
+  const [newEmail, setNewEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
 
   const handleNameChange = (name: string) => {
     setFormData({
       ...formData,
       name,
       slug: location ? formData.slug : name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+    });
+  };
+
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const addEmail = () => {
+    const email = newEmail.trim().toLowerCase();
+    setEmailError('');
+    
+    if (!email) return;
+    
+    if (!isValidEmail(email)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+    
+    if (formData.notificationEmails.includes(email)) {
+      setEmailError('This email is already added');
+      return;
+    }
+    
+    setFormData({
+      ...formData,
+      notificationEmails: [...formData.notificationEmails, email],
+    });
+    setNewEmail('');
+  };
+
+  const removeEmail = (emailToRemove: string) => {
+    setFormData({
+      ...formData,
+      notificationEmails: formData.notificationEmails.filter(e => e !== emailToRemove),
     });
   };
 
@@ -422,6 +462,78 @@ function LocationForm({ location, onSubmit, onCancel }: LocationFormProps) {
         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
         placeholder="(206) 555-1234"
       />
+
+      {/* Rating Threshold */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Rating Threshold <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={formData.ratingThreshold}
+          onChange={(e) => setFormData({ ...formData, ratingThreshold: parseInt(e.target.value, 10) })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        >
+          <option value={3}>3 Stars</option>
+          <option value={4}>4 Stars</option>
+          <option value={5}>5 Stars</option>
+        </select>
+        <p className="text-sm text-gray-500 mt-1">
+          Ratings at or above this threshold will show review platforms
+        </p>
+      </div>
+
+      {/* Notification Emails */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Notification Emails
+        </label>
+        <div className="flex gap-2 mb-2">
+          <div className="flex-1 relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(e) => { setNewEmail(e.target.value); setEmailError(''); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addEmail(); } }}
+              placeholder="Enter email address"
+              className={cn(
+                "w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent",
+                emailError ? "border-red-300" : "border-gray-300"
+              )}
+            />
+          </div>
+          <Button type="button" onClick={addEmail} variant="outline">
+            <Plus className="h-4 w-4 mr-1" />
+            Add
+          </Button>
+        </div>
+        {emailError && (
+          <p className="text-sm text-red-500 mb-2">{emailError}</p>
+        )}
+        <p className="text-sm text-gray-500 mb-2">
+          These emails will receive notifications when low-rating feedback is submitted
+        </p>
+        
+        {formData.notificationEmails.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {formData.notificationEmails.map((email) => (
+              <span
+                key={email}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+              >
+                {email}
+                <button
+                  type="button"
+                  onClick={() => removeEmail(email)}
+                  className="p-0.5 hover:bg-gray-200 rounded-full"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="flex justify-end gap-3 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>

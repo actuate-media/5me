@@ -71,17 +71,19 @@ model CompanyUser {
 
 // Location model
 model Location {
-  id        String   @id @default(cuid())
-  companyId String
-  name      String
-  slug      String
-  address   String?
-  city      String?
-  state     String?
-  zip       String?
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  companyId          String
+  name               String
+  slug               String
+  address            String?
+  city               String?
+  state              String?
+  zip                String?
+  phone              String?
+  ratingThreshold    Int      @default(4) // Ratings at or above this show review platforms
+  notificationEmails String[] @default([]) // Email addresses to notify on low-rating feedback
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   // Relations
   company  Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)

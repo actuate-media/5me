@@ -9,6 +9,8 @@ export interface CreateLocationInput {
   state?: string;
   zip?: string;
   phone?: string;
+  ratingThreshold?: number;
+  notificationEmails?: string[];
 }
 
 export interface UpdateLocationInput {
@@ -19,6 +21,8 @@ export interface UpdateLocationInput {
   state?: string;
   zip?: string;
   phone?: string;
+  ratingThreshold?: number;
+  notificationEmails?: string[];
 }
 
 /**
@@ -105,6 +109,8 @@ export async function createLocation(data: CreateLocationInput) {
       state: data.state,
       zip: data.zip,
       phone: data.phone,
+      ratingThreshold: data.ratingThreshold ?? 4,
+      notificationEmails: data.notificationEmails ?? [],
     },
   });
 }
@@ -123,6 +129,8 @@ export async function updateLocation(id: string, data: UpdateLocationInput) {
       ...(data.state !== undefined && { state: data.state }),
       ...(data.zip !== undefined && { zip: data.zip }),
       ...(data.phone !== undefined && { phone: data.phone }),
+      ...(data.ratingThreshold !== undefined && { ratingThreshold: data.ratingThreshold }),
+      ...(data.notificationEmails !== undefined && { notificationEmails: data.notificationEmails }),
     },
   });
 }
