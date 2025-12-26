@@ -91,55 +91,55 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
     <div className="min-h-screen relative overflow-hidden bg-linear-to-b from-gray-900 to-[#586c96]">
       <StarfieldBackground />
 
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          {/* Top bar */}
-          <div className="flex items-center justify-between mb-6">
-            <a
-              href="https://5me.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="5me.io"
-              className="inline-flex items-center"
-            >
-              <img
-                src="/assets/logos/5me-logo.svg"
-                alt="5me.io"
-                className="h-7 w-auto"
-              />
-            </a>
+      {/* Fixed 5me logo top-left */}
+      <a
+        href="https://5me.io"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="5me.io"
+        className="fixed top-6 left-6 z-20"
+      >
+        <img
+          src="/assets/logos/5me-logo.svg"
+          alt="5me.io"
+          className="h-10 w-auto"
+        />
+      </a>
 
-            {location.companyLocationsCount > 1 && (
-              <Link
-                href={`/reviews/${location.companySlug}`}
-                className="inline-flex items-center gap-2 text-gray-200 hover:text-white transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to locations
-              </Link>
-            )}
-          </div>
+      {/* Conditional back-to-locations top-right */}
+      {location.companyLocationsCount > 1 && (
+        <Link
+          href={`/reviews/${location.companySlug}`}
+          className="fixed top-6 right-6 z-20 inline-flex items-center gap-2 text-gray-200 hover:text-white transition-colors text-sm"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to locations
+        </Link>
+      )}
+
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-xl">
 
           {step === 'rating' && (
-            <Card className="p-8 bg-white border border-gray-200 shadow-sm">
-              <div className="flex flex-col items-center text-center mb-6">
+            <Card className="px-12 py-14 bg-white border border-gray-200 shadow-lg rounded-2xl">
+              <div className="flex flex-col items-center text-center mb-10">
                 {location.companyLogo ? (
                   <img
                     src={location.companyLogo}
                     alt={location.companyName}
-                    className="h-10 w-auto mb-4"
+                    className="h-16 w-auto mb-6"
                   />
                 ) : (
-                  <div className="text-sm font-medium text-gray-700 mb-4">{location.companyName}</div>
+                  <div className="text-xl font-semibold text-gray-800 mb-6">{location.companyName}</div>
                 )}
 
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-2xl font-bold text-gray-900">
                   How was your experience?
                 </h2>
-                <p className="text-sm text-gray-500">Please rate your experience</p>
+                <p className="text-base text-gray-500 mt-1">Please rate your experience</p>
               </div>
 
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center gap-3">
                 {[1, 2, 3, 4, 5].map((value) => (
                   <button
                     key={value}
@@ -151,7 +151,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                   >
                     <Star
                       className={cn(
-                        'h-10 w-10 transition-colors',
+                        'h-14 w-14 transition-colors',
                         (hoveredRating || rating) >= value
                           ? 'fill-[#ee5f64] text-[#ee5f64]'
                           : 'text-gray-300'
@@ -159,11 +159,6 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                     />
                   </button>
                 ))}
-              </div>
-
-              <div className="mt-6 text-center">
-                <div className="text-sm font-medium text-gray-900">{location.companyName}</div>
-                <div className="text-sm text-gray-500">{location.name}</div>
               </div>
             </Card>
           )}
