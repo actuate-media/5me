@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import type { Location, ReviewSource, ReviewSourceType } from '@/types';
 
 // Source icons/colors - support both uppercase and lowercase
-const sourceConfig: Record<string, { icon: string; color: string; bgColor: string }> = {
+const sourceConfig = {
   google: { icon: 'G', color: 'text-blue-600', bgColor: 'bg-blue-100' },
   GOOGLE: { icon: 'G', color: 'text-blue-600', bgColor: 'bg-blue-100' },
   facebook: { icon: 'f', color: 'text-blue-700', bgColor: 'bg-blue-100' },
@@ -33,7 +33,13 @@ const sourceConfig: Record<string, { icon: string; color: string; bgColor: strin
   CLUTCH: { icon: 'C', color: 'text-orange-600', bgColor: 'bg-orange-100' },
   other: { icon: '★', color: 'text-gray-600', bgColor: 'bg-gray-100' },
   OTHER: { icon: '★', color: 'text-gray-600', bgColor: 'bg-gray-100' },
-};
+} as const;
+
+const defaultSourceConfig = { icon: '★', color: 'text-gray-600', bgColor: 'bg-gray-100' };
+
+function getSourceConfig(type: string) {
+  return sourceConfig[type as keyof typeof sourceConfig] ?? defaultSourceConfig;
+}
 
 interface LocationWithCompany extends Location {
   company?: {
@@ -316,7 +322,7 @@ function SourceCard({
   onDelete: () => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
-  const config = sourceConfig[source.type] || sourceConfig.other;
+  const config = getSourceConfig(source.type);
 
   return (
     <Card className="p-4">

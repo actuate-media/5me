@@ -125,7 +125,7 @@ export default function UsersPage() {
     const newUser: User = {
       id: String(Date.now()),
       email,
-      firstName: email.split('@')[0],
+      firstName: email.split('@')[0] ?? '',
       lastName: '',
       role,
       isActive: true,
