@@ -100,9 +100,9 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
         className="fixed top-6 left-6 z-20"
       >
         <img
-          src="/assets/logos/5me-logo.svg"
+          src="/assets/logos/5me-logo.png"
           alt="5me.io"
-          className="h-10 w-auto"
+          className="h-12 w-auto"
         />
       </a>
 
@@ -127,10 +127,10 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                   <img
                     src={location.companyLogo}
                     alt={location.companyName}
-                    className="h-16 w-auto mb-6"
+                    className="h-24 w-auto mb-6"
                   />
                 ) : (
-                  <div className="text-xl font-semibold text-gray-800 mb-6">{location.companyName}</div>
+                  <div className="text-2xl font-bold text-gray-800 mb-6">{location.companyName}</div>
                 )}
 
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -153,7 +153,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                       className={cn(
                         'h-14 w-14 transition-colors',
                         (hoveredRating || rating) >= value
-                          ? 'fill-[#ee5f64] text-[#ee5f64]'
+                          ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-300'
                       )}
                     />
