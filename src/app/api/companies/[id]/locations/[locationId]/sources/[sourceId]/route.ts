@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getSourceById, updateSource, deleteSource } from '@/services/source.service';
+import { ReviewSourceType } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
+
+function normalizeReviewSourceType(input: unknown): ReviewSourceType | null {
+  if (typeof input !== 'string' || input.trim().length === 0) return null;
+  const upper = input.trim().toUpperCase();
+  return (Object.values(ReviewSourceType) as string[]).includes(upper) ? (upper as ReviewSourceType) : null;
+}
 
 interface RouteParams {
   params: Promise<{ id: string; locationId: string; sourceId: string }>;
@@ -42,6 +49,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const { sourceId } = await params;
     const body = await request.json();
+
+    // Client types are lowercase; Prisma enum is uppercase.
+    if (body && typeof body === 'object' && 'type' in body) {
+      const normalizedType = normalizeReviewSourceType((body as { type?: unknown }).type);
+      if (normalizedType) {
+        (body as { type?: ReviewSourceType }).type = normalizedType;
+      }
+    }
 
     const source = await updateSource(sourceId, body);
     return NextResponse.json(source);

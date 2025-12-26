@@ -568,7 +568,7 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
           <Input
             value={placeId}
             onChange={(e) => setPlaceId(e.target.value.trim())}
-            placeholder="ChIJA1z8o5hCkFQRS-wiGKp5U3Q"
+            placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
             required
           />
           {placeId && (

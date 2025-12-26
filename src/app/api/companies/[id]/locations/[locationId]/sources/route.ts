@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getSourcesByLocation, createSource } from '@/services/source.service';
+import { ReviewSourceType } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
+
+function normalizeReviewSourceType(input: unknown): ReviewSourceType | null {
+  if (typeof input !== 'string' || input.trim().length === 0) return null;
+  const upper = input.trim().toUpperCase();
+  return (Object.values(ReviewSourceType) as string[]).includes(upper) ? (upper as ReviewSourceType) : null;
+}
 
 interface RouteParams {
   params: Promise<{ id: string; locationId: string }>;
@@ -39,13 +46,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const { type, name, url, icon } = body;
 
-    if (!type || !name || !url) {
+    const normalizedType = normalizeReviewSourceType(type);
+
+    if (!normalizedType || !name || !url) {
       return NextResponse.json({ error: 'Type, name, and URL are required' }, { status: 400 });
     }
 
     const source = await createSource({
       locationId,
-      type,
+      type: normalizedType,
       name,
       url,
       icon,
