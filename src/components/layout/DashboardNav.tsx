@@ -69,8 +69,8 @@ export function DashboardNav({ user }: DashboardNavProps) {
                       href={item.href}
                       className={cn(
                         pathname === item.href || pathname.startsWith(item.href + '/')
-                          ? 'bg-gray-100 text-indigo-600'
-                          : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600',
+                          ? 'bg-[#f0f3f8] text-[#586c96]'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-[#586c96]',
                         'group flex gap-x-3 rounded-md p-2 text-sm font-medium'
                       )}
                     >
@@ -96,8 +96,8 @@ export function DashboardNav({ user }: DashboardNavProps) {
                         href={item.href}
                         className={cn(
                           pathname === item.href
-                            ? 'bg-gray-100 text-indigo-600'
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600',
+                            ? 'bg-[#f0f3f8] text-[#586c96]'
+                            : 'text-gray-700 hover:bg-gray-50 hover:text-[#586c96]',
                           'group flex gap-x-3 rounded-md p-2 text-sm font-medium'
                         )}
                       >
@@ -119,8 +119,8 @@ export function DashboardNav({ user }: DashboardNavProps) {
                       href={item.href}
                       className={cn(
                         pathname === item.href
-                          ? 'bg-gray-100 text-indigo-600'
-                          : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600',
+                          ? 'bg-[#f0f3f8] text-[#586c96]'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-[#586c96]',
                         'group flex gap-x-3 rounded-md p-2 text-sm font-medium'
                       )}
                     >
@@ -140,17 +140,17 @@ export function DashboardNav({ user }: DashboardNavProps) {
                     alt=""
                   />
                 ) : (
-                  <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-medium">
+                  <div className="h-8 w-8 rounded-full bg-[#586c96] flex items-center justify-center text-white text-sm font-medium">
                     {user?.name?.[0] || 'U'}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <span className="block truncate">{user?.name}</span>
                   {isSuperAdmin && (
-                    <span className="text-xs text-purple-600 font-medium">Super Admin</span>
+                    <span className="text-xs text-[#ee5f64] font-medium">Super Admin</span>
                   )}
                   {user?.role === 'ADMIN' && (
-                    <span className="text-xs text-blue-600 font-medium">Admin</span>
+                    <span className="text-xs text-[#586c96] font-medium">Admin</span>
                   )}
                 </div>
               </div>

@@ -89,13 +89,13 @@ export function EmailTemplatesModal({ isOpen, onClose, company, location }: Emai
               className={cn(
                 'px-4 py-2.5 text-sm font-medium transition-colors relative',
                 activeTab === tab.id
-                  ? 'text-indigo-600'
+                  ? 'text-[#586c96]'
                   : 'text-gray-500 hover:text-gray-700'
               )}
             >
               {tab.label}
               {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#586c96]" />
               )}
             </button>
           ))}
@@ -202,13 +202,13 @@ function generateInitialEmail(companyName: string, logoUrl: string, reviewUrl: s
             color:#ffffff;
             text-decoration:none;
             border-radius:50px;
-            background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow:0 4px 15px 0 rgba(102, 126, 234, 0.4);
+            background:linear-gradient(135deg, #586c96 0%, #ee5f64 100%);
+            box-shadow:0 4px 15px 0 rgba(238, 95, 100, 0.4);
         }
         
         .cta-cell {
             border-radius:50px;
-            background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background:linear-gradient(135deg, #586c96 0%, #ee5f64 100%);
         }
         
         /* Mobile */
@@ -288,7 +288,7 @@ function generateInitialEmail(companyName: string, logoUrl: string, reviewUrl: s
                             <td align="center" style="padding:0 40px 40px 40px;">
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                                     <tr>
-                                        <td class="cta-cell" style="border-radius:50px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow:0 4px 15px 0 rgba(102, 126, 234, 0.4);">
+                                        <td class="cta-cell" style="border-radius:50px; background:linear-gradient(135deg, #586c96 0%, #ee5f64 100%); box-shadow:0 4px 15px 0 rgba(238, 95, 100, 0.4);">
                                             <a href="${reviewUrl}" target="_blank" class="cta-btn" style="display:inline-block; padding:16px 36px; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:50px;">Share Your Feedback</a>
                                         </td>
                                     </tr>
@@ -371,13 +371,13 @@ function generateFollowupEmail(companyName: string, logoUrl: string, reviewUrl: 
             color:#ffffff;
             text-decoration:none;
             border-radius:50px;
-            background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow:0 4px 15px 0 rgba(102, 126, 234, 0.4);
+            background:linear-gradient(135deg, #586c96 0%, #ee5f64 100%);
+            box-shadow:0 4px 15px 0 rgba(238, 95, 100, 0.4);
         }
         
         .cta-cell {
             border-radius:50px;
-            background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background:linear-gradient(135deg, #586c96 0%, #ee5f64 100%);
         }
         
         /* Mobile */
@@ -460,7 +460,7 @@ function generateFollowupEmail(companyName: string, logoUrl: string, reviewUrl: 
                             <td align="center" style="padding:0 40px 40px 40px;">
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                                     <tr>
-                                        <td class="cta-cell" style="border-radius:50px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow:0 4px 15px 0 rgba(102, 126, 234, 0.4);">
+                                        <td class="cta-cell" style="border-radius:50px; background:linear-gradient(135deg, #586c96 0%, #ee5f64 100%); box-shadow:0 4px 15px 0 rgba(238, 95, 100, 0.4);">
                                             <a href="${reviewUrl}" target="_blank" class="cta-btn" style="display:inline-block; padding:16px 36px; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:50px;">Take 2 Minutes to Help Us</a>
                                         </td>
                                     </tr>
@@ -543,13 +543,13 @@ function generateFinalEmail(companyName: string, logoUrl: string, reviewUrl: str
             color:#ffffff;
             text-decoration:none;
             border-radius:50px;
-            background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow:0 4px 15px 0 rgba(102, 126, 234, 0.4);
+            background:linear-gradient(135deg, #586c96 0%, #ee5f64 100%);
+            box-shadow:0 4px 15px 0 rgba(238, 95, 100, 0.4);
         }
         
         .cta-cell {
             border-radius:50px;
-            background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background:linear-gradient(135deg, #586c96 0%, #ee5f64 100%);
         }
         
         /* Mobile */
@@ -632,7 +632,7 @@ function generateFinalEmail(companyName: string, logoUrl: string, reviewUrl: str
                             <td align="center" style="padding:0 40px 40px 40px;">
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                                     <tr>
-                                        <td class="cta-cell" style="border-radius:50px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow:0 4px 15px 0 rgba(102, 126, 234, 0.4);">
+                                        <td class="cta-cell" style="border-radius:50px; background:linear-gradient(135deg, #586c96 0%, #ee5f64 100%); box-shadow:0 4px 15px 0 rgba(238, 95, 100, 0.4);">
                                             <a href="${reviewUrl}" target="_blank" class="cta-btn" style="display:inline-block; padding:16px 36px; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:50px;">Share Your Experience Now</a>
                                         </td>
                                     </tr>

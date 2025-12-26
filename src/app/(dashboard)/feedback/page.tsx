@@ -179,7 +179,7 @@ export default function FeedbackPage() {
             placeholder="Search feedback..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent"
           />
         </div>
         <Select
@@ -198,7 +198,7 @@ export default function FeedbackPage() {
       <Card>
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+            <Loader2 className="h-8 w-8 text-[#586c96] animate-spin" />
           </div>
         ) : error ? (
           <div className="text-center py-12">
@@ -338,7 +338,7 @@ function FeedbackDetail({
       <div className="flex items-start justify-between">
         <div>
           <h3 className="font-semibold text-gray-900">{feedback.name}</h3>
-          <a href={`mailto:${feedback.email}`} className="text-sm text-indigo-600 hover:underline">
+          <a href={`mailto:${feedback.email}`} className="text-sm text-[#586c96] hover:underline">
             {feedback.email}
           </a>
         </div>

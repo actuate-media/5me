@@ -76,7 +76,7 @@ export default async function DashboardPage() {
     { name: 'Total Companies', value: companyCount.toString(), icon: Building2, color: 'bg-blue-500' },
     { name: 'Total Locations', value: locationCount.toString(), icon: MapPin, color: 'bg-green-500' },
     { name: 'Review Clicks', value: clickCount.toLocaleString(), icon: Star, color: 'bg-yellow-500' },
-    { name: 'Feedback Received', value: feedbackCount.toString(), icon: MessageSquare, color: 'bg-purple-500' },
+    { name: 'Feedback Received', value: feedbackCount.toString(), icon: MessageSquare, color: 'bg-[#ee5f64]' },
   ];
 
   return (
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
                   <div className="flex items-center gap-3">
                     <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold ${
                       source.sourceType === 'GOOGLE' ? 'bg-blue-100 text-blue-600' :
-                      source.sourceType === 'FACEBOOK' ? 'bg-indigo-100 text-indigo-600' :
+                      source.sourceType === 'FACEBOOK' ? 'bg-[#f0f3f8] text-[#586c96]' :
                       source.sourceType === 'YELP' ? 'bg-red-100 text-red-600' :
                       'bg-gray-100 text-gray-600'
                     }`}>
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-medium text-gray-900">Top Locations</h2>
-            <Link href="/companies" className="text-sm text-indigo-600 hover:underline">View all</Link>
+            <Link href="/companies" className="text-sm text-[#586c96] hover:underline">View all</Link>
           </div>
           {topLocations.length > 0 ? (
             <div className="space-y-4">
@@ -174,7 +174,7 @@ export default async function DashboardPage() {
             <div className="text-center py-8 text-gray-500">
               <MapPin className="h-8 w-8 mx-auto mb-2 text-gray-300" />
               <p>No locations yet</p>
-              <Link href="/companies" className="text-sm text-indigo-600 hover:underline mt-2 inline-block">
+              <Link href="/companies" className="text-sm text-[#586c96] hover:underline mt-2 inline-block">
                 Add your first company
               </Link>
             </div>
@@ -230,7 +230,7 @@ export default async function DashboardPage() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-medium text-gray-900">Recent Feedback</h2>
-            <Link href="/feedback" className="text-sm text-indigo-600 hover:underline">View all</Link>
+            <Link href="/feedback" className="text-sm text-[#586c96] hover:underline">View all</Link>
           </div>
           {recentFeedback.length > 0 ? (
             <div className="space-y-4">

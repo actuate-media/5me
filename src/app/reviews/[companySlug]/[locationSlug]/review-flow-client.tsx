@@ -69,7 +69,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-gray-900 to-indigo-900">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-gray-900 to-[#586c96]">
       <StarfieldBackground />
 
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
@@ -153,7 +153,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                     onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
                     rows={4}
                     required
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ee5f64]"
                     placeholder="Tell us about your experience..."
                   />
                 </div>
@@ -195,13 +195,13 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                 <button
                   key={source.id}
                   onClick={() => handleSourceClick(source)}
-                  className="w-full p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors flex items-center justify-between group"
+                  className="w-full p-4 border border-gray-200 rounded-lg hover:border-[#ee5f64] hover:bg-[#fef2f2] transition-colors flex items-center justify-between group"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{SOURCE_ICONS[source.type] || '📝'}</span>
                     <span className="font-medium text-gray-900">{source.name}</span>
                   </div>
-                  <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-indigo-500" />
+                  <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#ee5f64]" />
                 </button>
               ))}
             </div>

@@ -130,7 +130,7 @@ export default function CompaniesPage() {
             placeholder="Search companies..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent transition-all"
           />
         </div>
         <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
@@ -139,7 +139,7 @@ export default function CompaniesPage() {
             className={cn(
               'p-2 rounded-md transition-all',
               viewMode === 'cards' 
-                ? 'bg-white shadow-sm text-indigo-600' 
+                ? 'bg-white shadow-sm text-[#586c96]' 
                 : 'text-gray-500 hover:text-gray-700'
             )}
             title="Card View"
@@ -151,7 +151,7 @@ export default function CompaniesPage() {
             className={cn(
               'p-2 rounded-md transition-all',
               viewMode === 'table' 
-                ? 'bg-white shadow-sm text-indigo-600' 
+                ? 'bg-white shadow-sm text-[#586c96]' 
                 : 'text-gray-500 hover:text-gray-700'
             )}
             title="Table View"
@@ -165,7 +165,7 @@ export default function CompaniesPage() {
       {isLoading && (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <Loader2 className="h-10 w-10 text-indigo-600 animate-spin mx-auto mb-3" />
+            <Loader2 className="h-10 w-10 text-[#ee5f64] animate-spin mx-auto mb-3" />
             <p className="text-gray-500 text-sm">Loading companies...</p>
           </div>
         </div>
@@ -343,7 +343,7 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
   return (
     <Card 
       variant="bordered" 
-      className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-300 transition-all duration-200 group"
+      className="p-0 overflow-hidden hover:shadow-lg hover:border-[#586c96]/40 transition-all duration-200 group"
     >
       {/* Main Content */}
       <div className="p-5">
@@ -356,7 +356,7 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
               className="h-16 w-16 rounded-xl object-cover flex-shrink-0 shadow-sm"
             />
           ) : (
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-[#586c96] to-[#ee5f64] flex items-center justify-center flex-shrink-0 shadow-sm">
               <span className="text-white text-2xl font-bold">{initials}</span>
             </div>
           )}
@@ -380,7 +380,7 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
               "p-1.5 rounded-md transition-all flex-shrink-0",
               copied 
                 ? "bg-green-100 text-green-600" 
-                : "text-gray-400 hover:text-indigo-600 hover:bg-white"
+                : "text-gray-400 hover:text-[#586c96] hover:bg-white"
             )}
             title={copied ? "Copied!" : "Copy URL"}
           >
@@ -388,7 +388,7 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
           </button>
           <button
             onClick={handleOpenUrl}
-            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-md transition-all flex-shrink-0"
+            className="p-1.5 text-gray-400 hover:text-[#586c96] hover:bg-white rounded-md transition-all flex-shrink-0"
             title="Open in new tab"
           >
             <ExternalLink className="h-4 w-4" />
@@ -398,12 +398,12 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
         {/* Stats Row */}
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-1.5">
-            <MapPin className="h-4 w-4 text-indigo-500" />
+            <MapPin className="h-4 w-4 text-[#ee5f64]" />
             <span className="text-sm font-semibold text-gray-700">{locationCount}</span>
             <span className="text-sm text-gray-400">{locationCount === 1 ? 'Location' : 'Locations'}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Globe className="h-4 w-4 text-indigo-500" />
+            <Globe className="h-4 w-4 text-[#ee5f64]" />
             <span className="text-sm font-semibold text-gray-700">{sourceCount}</span>
             <span className="text-sm text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
           </div>
@@ -458,7 +458,7 @@ function ActionButton({ icon: Icon, label, onClick, variant = 'default' }: Actio
         'p-2.5 rounded-lg transition-all duration-200',
         variant === 'danger' 
           ? 'text-gray-400 hover:text-red-600 hover:bg-red-50' 
-          : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
+          : 'text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8]'
       )}
       title={label}
     >
@@ -532,8 +532,8 @@ function CompanyTable({ companies, onEdit, onDelete, onEmail }: CompanyTableProp
                           className="h-10 w-10 rounded-lg object-contain bg-gray-50"
                         />
                       ) : (
-                        <div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="h-5 w-5 text-indigo-600" />
+                        <div className="h-10 w-10 rounded-lg bg-[#f0f3f8] flex items-center justify-center flex-shrink-0">
+                          <Building2 className="h-5 w-5 text-[#586c96]" />
                         </div>
                       )}
                       <div className="min-w-0">
@@ -549,7 +549,7 @@ function CompanyTable({ companies, onEdit, onDelete, onEmail }: CompanyTableProp
                       </code>
                       <button
                         onClick={() => handleCopyUrl(company)}
-                        className="p-1 text-gray-400 hover:text-indigo-600 rounded transition-colors"
+                        className="p-1 text-gray-400 hover:text-[#586c96] rounded transition-colors"
                         title="Copy URL"
                       >
                         {copiedId === company.id ? (
@@ -562,7 +562,7 @@ function CompanyTable({ companies, onEdit, onDelete, onEmail }: CompanyTableProp
                         href={`/reviews/${company.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1 text-gray-400 hover:text-indigo-600 rounded transition-colors"
+                        className="p-1 text-gray-400 hover:text-[#586c96] rounded transition-colors"
                         title="Open"
                       >
                         <ExternalLink className="h-4 w-4" />
@@ -585,21 +585,21 @@ function CompanyTable({ companies, onEdit, onDelete, onEmail }: CompanyTableProp
                     <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => onEdit(company)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8] rounded-lg transition-colors"
                         title="Edit"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => onEmail(company)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8] rounded-lg transition-colors"
                         title="Email Marketing"
                       >
                         <Mail className="h-4 w-4" />
                       </button>
                       <Link
                         href={`/companies/${company.id}/locations`}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8] rounded-lg transition-colors"
                         title="Manage Locations"
                       >
                         <Settings className="h-4 w-4" />

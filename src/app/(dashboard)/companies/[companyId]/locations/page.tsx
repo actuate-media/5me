@@ -114,7 +114,7 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+        <Loader2 className="h-8 w-8 text-[#586c96] animate-spin" />
       </div>
     );
   }
@@ -148,8 +148,8 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
             {company.logo ? (
               <img src={company.logo} alt={company.name} className="h-16 w-16 rounded-xl object-cover" />
             ) : (
-              <div className="h-16 w-16 rounded-xl bg-indigo-100 flex items-center justify-center">
-                <Building2 className="h-8 w-8 text-indigo-600" />
+              <div className="h-16 w-16 rounded-xl bg-[#f0f3f8] flex items-center justify-center">
+                <Building2 className="h-8 w-8 text-[#586c96]" />
               </div>
             )}
             <div>
@@ -172,7 +172,7 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
             placeholder="Search locations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent"
           />
         </div>
       </div>
@@ -271,12 +271,12 @@ function LocationCard({
   };
 
   return (
-    <Card className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-300 transition-all duration-200 group">
+    <Card className="p-0 overflow-hidden hover:shadow-lg hover:border-[#586c96]/40 transition-all duration-200 group">
       {/* Main Content */}
       <div className="p-5">
         {/* Header: Avatar + Name */}
         <div className="flex items-center gap-4 mb-4">
-          <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+          <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-[#586c96] to-[#ee5f64] flex items-center justify-center flex-shrink-0 shadow-sm">
             <span className="text-white text-2xl font-bold">{initials}</span>
           </div>
           <div className="min-w-0 flex-1">
@@ -304,7 +304,7 @@ function LocationCard({
               "p-1.5 rounded-md transition-all flex-shrink-0",
               copied 
                 ? "bg-green-100 text-green-600" 
-                : "text-gray-400 hover:text-indigo-600 hover:bg-white"
+                : "text-gray-400 hover:text-[#586c96] hover:bg-white"
             )}
             title={copied ? "Copied!" : "Copy URL"}
           >
@@ -312,7 +312,7 @@ function LocationCard({
           </button>
           <button
             onClick={handleOpenUrl}
-            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-md transition-all flex-shrink-0"
+            className="p-1.5 text-gray-400 hover:text-[#586c96] hover:bg-white rounded-md transition-all flex-shrink-0"
             title="Open in new tab"
           >
             <ExternalLink className="h-4 w-4" />
@@ -322,7 +322,7 @@ function LocationCard({
         {/* Stats Row */}
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-1.5">
-            <Globe className="h-4 w-4 text-indigo-500" />
+            <Globe className="h-4 w-4 text-[#ee5f64]" />
             <span className="text-sm font-semibold text-gray-700">{sourceCount}</span>
             <span className="text-sm text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
           </div>
@@ -333,21 +333,21 @@ function LocationCard({
       <div className="border-t border-gray-100 bg-gray-50/80 px-4 py-2.5 flex items-center justify-center gap-1">
         <button
           onClick={onEdit}
-          className="p-2.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
+          className="p-2.5 rounded-lg text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8] transition-all duration-200"
           title="Edit Location"
         >
           <Edit className="h-5 w-5" />
         </button>
         <button
           onClick={() => {/* TODO: Email templates for location */}}
-          className="p-2.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
+          className="p-2.5 rounded-lg text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8] transition-all duration-200"
           title="Email Templates"
         >
           <Mail className="h-5 w-5" />
         </button>
         <Link 
           href={`/companies/${companyId}/locations/${location.id}`}
-          className="p-2.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
+          className="p-2.5 rounded-lg text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8] transition-all duration-200"
           title="Manage Review Sources"
         >
           <Settings className="h-5 w-5" />
@@ -495,7 +495,7 @@ function LocationForm({ location, onSubmit, onCancel }: LocationFormProps) {
         <select
           value={formData.ratingThreshold}
           onChange={(e) => setFormData({ ...formData, ratingThreshold: parseInt(e.target.value, 10) })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent"
         >
           <option value={3}>3 Stars</option>
           <option value={4}>4 Stars</option>
@@ -521,7 +521,7 @@ function LocationForm({ location, onSubmit, onCancel }: LocationFormProps) {
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addEmail(); } }}
               placeholder="Enter email address"
               className={cn(
-                "w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent",
+                "w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent",
                 emailError ? "border-red-300" : "border-gray-300"
               )}
             />

@@ -34,7 +34,7 @@ export function ReviewLandingClient({ company, locations }: ReviewLandingClientP
   );
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-gray-900 to-indigo-900">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-gray-900 to-[#586c96]">
       <StarfieldBackground />
       
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
@@ -57,7 +57,7 @@ export function ReviewLandingClient({ company, locations }: ReviewLandingClientP
               placeholder="Search locations..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ee5f64] focus:border-transparent"
             />
           </div>
 
@@ -71,8 +71,8 @@ export function ReviewLandingClient({ company, locations }: ReviewLandingClientP
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-indigo-500/20 rounded-lg">
-                      <MapPin className="h-5 w-5 text-indigo-400" />
+                    <div className="p-2 bg-[#ee5f64]/20 rounded-lg">
+                      <MapPin className="h-5 w-5 text-[#ee5f64]" />
                     </div>
                     <div>
                       <h3 className="font-medium text-white">{location.name}</h3>

@@ -55,7 +55,7 @@ export default function SettingsPage() {
                   className={cn(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                     activeTab === tab.id
-                      ? 'bg-indigo-50 text-indigo-600'
+                      ? 'bg-[#f0f3f8] text-[#586c96]'
                       : 'text-gray-700 hover:bg-gray-50'
                   )}
                 >
@@ -100,17 +100,17 @@ function ProfileSettings({ session, onSave, saved }: { session: ReturnType<typeo
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Profile Settings</h2>
       
       <div className="flex items-center gap-6 mb-8">
-        <div className="h-20 w-20 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden">
+        <div className="h-20 w-20 rounded-full bg-[#f0f3f8] flex items-center justify-center overflow-hidden">
           {session?.user?.image ? (
             <img src={session.user.image} alt="Profile" className="h-full w-full object-cover" />
           ) : (
-            <User className="h-10 w-10 text-indigo-600" />
+            <User className="h-10 w-10 text-[#586c96]" />
           )}
         </div>
         <div>
           <h3 className="font-medium text-gray-900">{session?.user?.name}</h3>
           <p className="text-sm text-gray-500">{session?.user?.email}</p>
-          <button className="text-sm text-indigo-600 hover:underline mt-1">
+          <button className="text-sm text-[#586c96] hover:underline mt-1">
             Change avatar
           </button>
         </div>
@@ -290,7 +290,7 @@ function NotificationToggle({
         onClick={onChange}
         className={cn(
           'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-          checked ? 'bg-indigo-600' : 'bg-gray-200'
+          checked ? 'bg-[#ee5f64]' : 'bg-gray-200'
         )}
       >
         <span

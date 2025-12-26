@@ -3,6 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand-coral: #ee5f64;
+  --brand-coral-hover: #e04a50;
+  --brand-coral-light: #fef2f2;
+  --brand-slate: #586c96;
+  --brand-slate-hover: #4a5c82;
+  --brand-slate-light: #f0f3f8;
 }
 
 @theme inline {

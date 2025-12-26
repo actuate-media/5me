@@ -134,7 +134,7 @@ export default function LocationSourcesPage({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+        <Loader2 className="h-8 w-8 text-[#ee5f64] animate-spin" />
       </div>
     );
   }
@@ -182,11 +182,11 @@ export default function LocationSourcesPage({
       </div>
 
       {/* Review Link Card */}
-      <Card className="p-6 mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+      <Card className="p-6 mb-6 bg-gradient-to-r from-[#586c96] to-[#ee5f64] text-white">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-lg mb-1">Review Collection Link</h3>
-            <p className="text-indigo-100 text-sm mb-3">
+            <p className="text-white/80 text-sm mb-3">
               Share this link with customers to collect reviews
             </p>
             <code className="bg-white/20 px-3 py-1.5 rounded text-sm">
@@ -222,8 +222,8 @@ export default function LocationSourcesPage({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-              <Globe className="h-5 w-5 text-indigo-600" />
+            <div className="h-10 w-10 rounded-lg bg-[#f0f3f8] flex items-center justify-center">
+              <Globe className="h-5 w-5 text-[#586c96]" />
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{sources.length}</p>
@@ -341,7 +341,7 @@ function SourceCard({
               href={source.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-sm text-indigo-600 hover:underline flex items-center gap-1"
+              className="text-sm text-[#586c96] hover:underline flex items-center gap-1"
             >
               {source.url}
               <ExternalLink className="h-3 w-3" />
@@ -473,8 +473,8 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
             type="button"
             onClick={() => setUseAutoUrl(!useAutoUrl)}
             className={cn(
-              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
-              useAutoUrl ? "bg-indigo-600" : "bg-gray-200"
+              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#ee5f64] focus:ring-offset-2",
+              useAutoUrl ? "bg-[#ee5f64]" : "bg-gray-200"
             )}
           >
             <span
@@ -532,7 +532,7 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
               href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-blue-200 rounded-lg text-indigo-600 hover:bg-blue-50 font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-blue-200 rounded-lg text-[#586c96] hover:bg-blue-50 font-medium transition-colors"
             >
               <Globe className="h-4 w-4" />
               Open Google Place ID Finder

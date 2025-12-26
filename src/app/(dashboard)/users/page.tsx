@@ -21,8 +21,8 @@ import { Card, Button, Input, Badge, Modal, Select } from '@/components/ui';
 import type { User, UserRole } from '@/types';
 
 const roleConfig: Record<UserRole, { label: string; icon: typeof Shield; color: string; variant: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
-  SUPERADMIN: { label: 'Super Admin', icon: ShieldCheck, color: 'text-purple-600', variant: 'default' },
-  ADMIN: { label: 'Admin', icon: Shield, color: 'text-blue-600', variant: 'info' },
+  SUPERADMIN: { label: 'Super Admin', icon: ShieldCheck, color: 'text-[#ee5f64]', variant: 'default' },
+  ADMIN: { label: 'Admin', icon: Shield, color: 'text-[#586c96]', variant: 'info' },
   USER: { label: 'User', icon: UserIcon, color: 'text-gray-600', variant: 'default' },
 };
 
@@ -226,8 +226,8 @@ export default function UsersPage() {
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Shield className="w-5 h-5 text-purple-600" />
+            <div className="p-2 bg-[#fef2f2] rounded-lg">
+              <Shield className="w-5 h-5 text-[#ee5f64]" />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.admins}</p>
@@ -299,7 +299,7 @@ export default function UsersPage() {
                         className="w-10 h-10 rounded-full"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#586c96] to-[#ee5f64] flex items-center justify-center text-white font-medium">
                         {user.firstName[0]}{user.lastName[0] || ''}
                       </div>
                     )}
@@ -398,7 +398,7 @@ export default function UsersPage() {
         {selectedUser && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#586c96] to-[#ee5f64] flex items-center justify-center text-white font-medium">
                 {selectedUser.firstName[0]}{selectedUser.lastName[0] || ''}
               </div>
               <div>

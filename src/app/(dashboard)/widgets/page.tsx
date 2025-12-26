@@ -130,14 +130,14 @@ export default function WidgetsPage() {
             placeholder="Search widgets..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent"
           />
         </div>
       </div>
 
       {isLoading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+          <Loader2 className="h-8 w-8 text-[#586c96] animate-spin" />
         </div>
       )}
 
@@ -557,7 +557,7 @@ function WidgetPreview({ widget }: { widget: ReviewWidget }) {
           ))}
           <div className="flex justify-center gap-2">
             {[0, 1, 2].map((i) => (
-              <div key={i} className={cn('h-2 w-2 rounded-full', i === 0 ? 'bg-indigo-600' : 'bg-gray-300')} />
+              <div key={i} className={cn('h-2 w-2 rounded-full', i === 0 ? 'bg-[#ee5f64]' : 'bg-gray-300')} />
             ))}
           </div>
         </div>
