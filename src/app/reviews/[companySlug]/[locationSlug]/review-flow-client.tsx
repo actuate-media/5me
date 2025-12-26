@@ -102,7 +102,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
         <img
           src="/assets/logos/5me-logo.png"
           alt="5me.io"
-          className="h-12 w-auto"
+          className="h-14 w-auto"
         />
       </a>
 
@@ -127,7 +127,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                   <img
                     src={location.companyLogo}
                     alt={location.companyName}
-                    className="h-24 w-auto mb-6"
+                    className="h-48 w-auto mb-6"
                   />
                 ) : (
                   <div className="text-2xl font-bold text-gray-800 mb-6">{location.companyName}</div>
