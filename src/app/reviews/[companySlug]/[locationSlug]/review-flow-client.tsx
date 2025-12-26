@@ -147,7 +147,10 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                     onMouseEnter={() => setHoveredRating(value)}
                     onMouseLeave={() => setHoveredRating(0)}
                     aria-label={`Rate ${value} star${value === 1 ? '' : 's'}`}
-                    className="p-2 transition-transform hover:scale-110"
+                    className={cn(
+                      'p-2 transition-transform hover:scale-110 rounded-lg',
+                      rating === value && 'ring-2 ring-[#586c96] ring-offset-2'
+                    )}
                   >
                     <Star
                       className={cn(
@@ -160,6 +163,26 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                   </button>
                 ))}
               </div>
+
+              {/* Emoji feedback section */}
+              {rating > 0 && (
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <div className="flex flex-col items-center text-center">
+                    <span className="text-5xl mb-3">
+                      {rating === 5 && '😃'}
+                      {rating === 4 && '😊'}
+                      {rating === 3 && '😐'}
+                      {rating === 2 && '😕'}
+                      {rating === 1 && '😞'}
+                    </span>
+                    <p className="text-gray-600">
+                      {rating >= 4 && 'Excellent! Thank you for your feedback!'}
+                      {rating === 3 && "Thank you for your feedback. We're always looking to improve."}
+                      {rating <= 2 && "We're sorry to hear that. Please let us know how we can improve."}
+                    </p>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
 
