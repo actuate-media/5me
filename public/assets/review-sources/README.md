@@ -7,6 +7,7 @@ Drop approved **SVG** logos for each review platform into this folder.
 - `facebook.svg`
 - `yelp.svg`
 - `bbb.svg`
+- `trustpilot.svg`
 - `clutch.svg`
 - `other.svg` (optional fallback)
 

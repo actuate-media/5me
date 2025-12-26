@@ -32,6 +32,8 @@ const sourceConfig = {
   YELP: { icon: 'Y', color: 'text-red-600', bgColor: 'bg-red-100' },
   bbb: { icon: 'B', color: 'text-blue-800', bgColor: 'bg-blue-100' },
   BBB: { icon: 'B', color: 'text-blue-800', bgColor: 'bg-blue-100' },
+  trustpilot: { icon: 'T', color: 'text-emerald-700', bgColor: 'bg-emerald-100' },
+  TRUSTPILOT: { icon: 'T', color: 'text-emerald-700', bgColor: 'bg-emerald-100' },
   clutch: { icon: 'C', color: 'text-orange-600', bgColor: 'bg-orange-100' },
   CLUTCH: { icon: 'C', color: 'text-orange-600', bgColor: 'bg-orange-100' },
   other: { icon: '★', color: 'text-gray-600', bgColor: 'bg-gray-100' },
@@ -495,6 +497,7 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
     facebook: 'Facebook Page',
     yelp: 'Yelp',
     bbb: 'Better Business Bureau',
+    trustpilot: 'Trustpilot',
     clutch: 'Clutch',
     other: 'Other',
   };
@@ -537,6 +540,7 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
         <option value="facebook">Facebook</option>
         <option value="yelp">Yelp</option>
         <option value="bbb">BBB</option>
+        <option value="trustpilot">Trustpilot</option>
         <option value="clutch">Clutch</option>
         <option value="other">Other</option>
       </Select>
@@ -642,6 +646,9 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
         )}
         {formData.type === 'bbb' && (
           <p className="text-gray-700">Go to your BBB business profile → Copy the URL</p>
+        )}
+        {formData.type === 'trustpilot' && (
+          <p className="text-gray-700">Go to your Trustpilot profile → Copy the URL</p>
         )}
         {formData.type === 'clutch' && (
           <p className="text-gray-700">Go to your Clutch profile → Reviews → Copy the review link</p>

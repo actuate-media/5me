@@ -101,6 +101,7 @@ enum ReviewSourceType {
   FACEBOOK
   YELP
   BBB
+  TRUSTPILOT
   TRIPADVISOR
   CLUTCH
   OTHER

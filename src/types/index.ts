@@ -58,7 +58,7 @@ export interface Location {
 }
 
 // Review Source types
-export type ReviewSourceType = 'google' | 'facebook' | 'yelp' | 'bbb' | 'clutch' | 'other';
+export type ReviewSourceType = 'google' | 'facebook' | 'yelp' | 'bbb' | 'trustpilot' | 'clutch' | 'other';
 
 export interface ReviewSource {
   id: string;
