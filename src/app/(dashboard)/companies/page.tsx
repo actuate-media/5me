@@ -8,15 +8,22 @@ import {
   MapPin, 
   Plus, 
   Search, 
-  MoreVertical,
   Edit,
   Trash2,
-  MessageSquare,
+  Mail,
   Settings,
-  Loader2
+  Loader2,
+  Copy,
+  ExternalLink,
+  Check,
+  LayoutGrid,
+  List,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Company } from '@/types';
+
+type ViewMode = 'cards' | 'table';
 
 export default function CompaniesPage() {
   const [search, setSearch] = useState('');
@@ -25,6 +32,8 @@ export default function CompaniesPage() {
   const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [deletingCompany, setDeletingCompany] = useState<Company | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
 
   const fetchCompanies = useCallback(async () => {
     try {
@@ -79,12 +88,13 @@ export default function CompaniesPage() {
     }
   };
 
-  const handleDeleteCompany = async (companyId: string) => {
-    if (!confirm('Are you sure you want to delete this company?')) return;
+  const handleDeleteCompany = async () => {
+    if (!deletingCompany) return;
     try {
-      const res = await fetch(`/api/companies/${companyId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/companies/${deletingCompany.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete company');
       await fetchCompanies();
+      setDeletingCompany(null);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete company');
     }
@@ -96,63 +106,121 @@ export default function CompaniesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Companies</h1>
-          <p className="text-gray-600">Manage your companies and their locations</p>
+          <p className="text-gray-500 text-sm mt-1">
+            {companies.length} {companies.length === 1 ? 'company' : 'companies'} total
+          </p>
         </div>
         <Button onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Add Company
+          Add New Company
         </Button>
       </div>
 
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      {/* Search and View Toggle */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search companies..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
           />
+        </div>
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('cards')}
+            className={cn(
+              'p-2 rounded-md transition-all',
+              viewMode === 'cards' 
+                ? 'bg-white shadow-sm text-indigo-600' 
+                : 'text-gray-500 hover:text-gray-700'
+            )}
+            title="Card View"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('table')}
+            className={cn(
+              'p-2 rounded-md transition-all',
+              viewMode === 'table' 
+                ? 'bg-white shadow-sm text-indigo-600' 
+                : 'text-gray-500 hover:text-gray-700'
+            )}
+            title="Table View"
+          >
+            <List className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
+      {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 text-indigo-600 animate-spin mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">Loading companies...</p>
+          </div>
         </div>
       )}
 
+      {/* Error State */}
       {error && (
-        <div className="text-center py-12">
-          <p className="text-red-600">{error}</p>
+        <div className="text-center py-16">
+          <div className="bg-red-50 text-red-600 rounded-lg p-4 inline-block">
+            <p className="font-medium">{error}</p>
+          </div>
           <Button onClick={fetchCompanies} variant="outline" className="mt-4">
             Try Again
           </Button>
         </div>
       )}
 
-      {!isLoading && !error && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Cards View */}
+      {!isLoading && !error && viewMode === 'cards' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filteredCompanies.map((company) => (
             <CompanyCard 
               key={company.id} 
               company={company}
               onEdit={() => setEditingCompany(company)}
-              onDelete={() => handleDeleteCompany(company.id)}
+              onDelete={() => setDeletingCompany(company)}
             />
           ))}
         </div>
       )}
 
+      {/* Table View */}
+      {!isLoading && !error && viewMode === 'table' && (
+        <CompanyTable 
+          companies={filteredCompanies}
+          onEdit={setEditingCompany}
+          onDelete={setDeletingCompany}
+        />
+      )}
+
+      {/* Empty State */}
       {!isLoading && !error && filteredCompanies.length === 0 && (
-        <div className="text-center py-12">
-          <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">No companies found</h3>
-          <p className="text-gray-500">Try adjusting your search or add a new company.</p>
+        <div className="text-center py-16">
+          <div className="bg-gray-50 rounded-2xl p-8 inline-block">
+            <Building2 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">No companies found</h3>
+            <p className="text-gray-500 text-sm mb-4">
+              {search ? 'Try adjusting your search terms' : 'Get started by adding your first company'}
+            </p>
+            {!search && (
+              <Button onClick={() => setIsAddModalOpen(true)} size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Add Company
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
@@ -184,87 +252,354 @@ export default function CompaniesPage() {
           />
         )}
       </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deletingCompany}
+        onClose={() => setDeletingCompany(null)}
+        title="Delete Company"
+        size="sm"
+      >
+        <div className="text-center py-4">
+          <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <Trash2 className="h-6 w-6 text-red-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Delete &quot;{deletingCompany?.name}&quot;?
+          </h3>
+          <p className="text-gray-500 text-sm mb-6">
+            This will permanently delete the company, all its locations, review sources, and feedback. This action cannot be undone.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={() => setDeletingCompany(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDeleteCompany}>
+              Delete Company
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
 
-function CompanyCard({ company, onEdit, onDelete }: { company: Company; onEdit: () => void; onDelete: () => void }) {
-  const [showMenu, setShowMenu] = useState(false);
+// ============================================================================
+// Company Card Component
+// ============================================================================
+
+interface CompanyCardProps {
+  company: Company;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function CompanyCard({ company, onEdit, onDelete }: CompanyCardProps) {
+  const [copied, setCopied] = useState(false);
+  
+  const locationCount = company._count?.locations ?? company.locationCount ?? 0;
+  const sourceCount = company.sourceCount ?? 0;
+  const reviewUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/reviews/${company.slug}`;
+  const isSingleLocation = locationCount === 1;
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(reviewUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleOpenUrl = () => {
+    window.open(reviewUrl, '_blank', 'noopener,noreferrer');
+  };
 
   return (
-    <Card className="p-6 relative">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          {company.logo ? (
-            <img src={company.logo} alt={company.name} className="h-12 w-12 rounded-lg object-cover" />
-          ) : (
-            <div className="h-12 w-12 rounded-lg bg-indigo-100 flex items-center justify-center">
-              <Building2 className="h-6 w-6 text-indigo-600" />
-            </div>
-          )}
-          <div>
-            <h3 className="font-semibold text-gray-900">{company.name}</h3>
-            <p className="text-sm text-gray-500">{company.slug}</p>
+    <Card 
+      variant="bordered" 
+      className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all duration-200 flex flex-col min-w-[280px]"
+    >
+      {/* Logo Section */}
+      <div className="p-5 pb-4 flex justify-center bg-gradient-to-b from-gray-50 to-white">
+        {company.logo ? (
+          <img 
+            src={company.logo} 
+            alt={company.name} 
+            className="h-16 w-auto max-w-[180px] object-contain"
+          />
+        ) : (
+          <div className="h-16 w-16 rounded-xl bg-indigo-100 flex items-center justify-center">
+            <Building2 className="h-8 w-8 text-indigo-600" />
+          </div>
+        )}
+      </div>
+
+      {/* Company Info */}
+      <div className="px-5 pb-3">
+        <h3 className="font-semibold text-gray-900 text-center truncate" title={company.name}>
+          {company.name}
+        </h3>
+      </div>
+
+      {/* Review URL */}
+      <div className="px-5 pb-3">
+        <div className="flex items-center justify-center gap-2 text-xs">
+          <span className="text-gray-400 font-medium">URL</span>
+          <span className="text-gray-600 truncate max-w-[120px]" title={`/reviews/${company.slug}`}>
+            /reviews/{company.slug}
+          </span>
+          <button
+            onClick={handleCopyUrl}
+            className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+            title="Copy URL"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+          <button
+            onClick={handleOpenUrl}
+            className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+            title="Open in new tab"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        {!isSingleLocation && locationCount > 0 && (
+          <p className="text-[10px] text-gray-400 text-center mt-1">
+            Multi-location directory
+          </p>
+        )}
+      </div>
+
+      {/* Stats */}
+      <div className="px-5 pb-4">
+        <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+          <div className="flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5" />
+            <span>{locationCount} {locationCount === 1 ? 'Location' : 'Locations'}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Globe className="h-3.5 w-3.5" />
+            <span>{sourceCount} {sourceCount === 1 ? 'Source' : 'Sources'}</span>
           </div>
         </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-1 rounded hover:bg-gray-100"
-          >
-            <MoreVertical className="h-5 w-5 text-gray-400" />
-          </button>
-          {showMenu && (
-            <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 w-48">
-              <button 
-                onClick={() => { onEdit(); setShowMenu(false); }}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <Edit className="h-4 w-4" /> Edit Company
-              </button>
-              <Link 
-                href={`/feedback?company=${company.id}`}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <MessageSquare className="h-4 w-4" /> View Feedback
-              </Link>
-              <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                <Settings className="h-4 w-4" /> Diagnostics
-              </button>
-              <hr className="my-1" />
-              <button 
-                onClick={() => { onDelete(); setShowMenu(false); }}
-                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </button>
-            </div>
-          )}
-        </div>
       </div>
 
-      <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-        <div className="flex items-center gap-1">
-          <MapPin className="h-4 w-4" />
-          <span>{company._count?.locations ?? company.locationCount ?? 0} locations</span>
-        </div>
-        <div className={cn(
-          "px-2 py-0.5 rounded-full text-xs font-medium",
-          (company._count?.locations ?? company.locationCount ?? 0) > 0 ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-        )}>
-          active
-        </div>
+      {/* Actions */}
+      <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-1 bg-gray-50/50">
+        <ActionButton 
+          icon={Edit} 
+          label="Edit" 
+          onClick={onEdit}
+        />
+        <ActionButton 
+          icon={Mail} 
+          label="Email" 
+          onClick={() => {/* TODO: Email marketing template */}}
+        />
+        <Link href={`/companies/${company.id}/locations`} className="contents">
+          <ActionButton 
+            icon={Settings} 
+            label="Locations"
+          />
+        </Link>
+        <ActionButton 
+          icon={Trash2} 
+          label="Delete" 
+          onClick={onDelete}
+          variant="danger"
+        />
       </div>
-
-      <Link
-        href={`/companies/${company.id}/locations`}
-        className="block w-full text-center py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-      >
-        Manage Locations
-      </Link>
     </Card>
   );
 }
+
+// ============================================================================
+// Action Button Component
+// ============================================================================
+
+interface ActionButtonProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onClick?: () => void;
+  variant?: 'default' | 'danger';
+}
+
+function ActionButton({ icon: Icon, label, onClick, variant = 'default' }: ActionButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'p-2 rounded-lg transition-colors group relative',
+        variant === 'danger' 
+          ? 'text-gray-400 hover:text-red-600 hover:bg-red-50' 
+          : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
+      )}
+      title={label}
+    >
+      <Icon className="h-4 w-4" />
+      <span className="sr-only">{label}</span>
+    </button>
+  );
+}
+
+// ============================================================================
+// Company Table Component
+// ============================================================================
+
+interface CompanyTableProps {
+  companies: Company[];
+  onEdit: (company: Company) => void;
+  onDelete: (company: Company) => void;
+}
+
+function CompanyTable({ companies, onEdit, onDelete }: CompanyTableProps) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyUrl = async (company: Company) => {
+    const reviewUrl = `${window.location.origin}/reviews/${company.slug}`;
+    try {
+      await navigator.clipboard.writeText(reviewUrl);
+      setCopiedId(company.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200">
+              <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+                Company
+              </th>
+              <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+                Review URL
+              </th>
+              <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+                Locations
+              </th>
+              <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+                Sources
+              </th>
+              <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {companies.map((company) => {
+              const locationCount = company._count?.locations ?? company.locationCount ?? 0;
+              const sourceCount = company.sourceCount ?? 0;
+              
+              return (
+                <tr key={company.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      {company.logo ? (
+                        <img 
+                          src={company.logo} 
+                          alt={company.name} 
+                          className="h-10 w-10 rounded-lg object-contain bg-gray-50"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="h-5 w-5 text-indigo-600" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{company.name}</p>
+                        <p className="text-xs text-gray-500">{company.slug}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+                        /reviews/{company.slug}
+                      </code>
+                      <button
+                        onClick={() => handleCopyUrl(company)}
+                        className="p-1 text-gray-400 hover:text-indigo-600 rounded transition-colors"
+                        title="Copy URL"
+                      >
+                        {copiedId === company.id ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </button>
+                      <a
+                        href={`/reviews/${company.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1 text-gray-400 hover:text-indigo-600 rounded transition-colors"
+                        title="Open"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                      <MapPin className="h-4 w-4 text-gray-400" />
+                      {locationCount}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                      <Globe className="h-4 w-4 text-gray-400" />
+                      {sourceCount}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => onEdit(company)}
+                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Email Marketing"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </button>
+                      <Link
+                        href={`/companies/${company.id}/locations`}
+                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Manage Locations"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </Link>
+                      <button
+                        onClick={() => onDelete(company)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Company Form Component
+// ============================================================================
 
 interface CompanyFormProps {
   company?: Company;

@@ -13,7 +13,7 @@ export interface UpdateCompanyInput {
 }
 
 /**
- * Get all companies
+ * Get all companies with location and source counts
  */
 export async function getAllCompanies() {
   const companies = await prisma.company.findMany({
@@ -24,15 +24,37 @@ export async function getAllCompanies() {
           widgets: true,
         },
       },
+      locations: {
+        include: {
+          _count: {
+            select: {
+              sources: true,
+            },
+          },
+        },
+      },
     },
     orderBy: { createdAt: 'desc' },
+    take: 100,
   });
 
-  return companies.map((c) => ({
-    ...c,
-    locationCount: c._count.locations,
-    widgetCount: c._count.widgets,
-  }));
+  return companies.map((c) => {
+    // Sum up sources across all locations
+    const sourceCount = c.locations.reduce((sum, loc) => sum + loc._count.sources, 0);
+    
+    return {
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      logo: c.logo,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      locationCount: c._count.locations,
+      widgetCount: c._count.widgets,
+      sourceCount,
+      _count: c._count,
+    };
+  });
 }
 
 /**
