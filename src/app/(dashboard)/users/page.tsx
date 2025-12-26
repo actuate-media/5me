@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { 
@@ -14,50 +14,11 @@ import {
   Mail,
   Calendar,
   CheckCircle,
-  XCircle
+  XCircle,
+  Loader2
 } from 'lucide-react';
 import { Card, Button, Input, Badge, Modal, Select } from '@/components/ui';
 import type { User, UserRole } from '@/types';
-
-// Mock users data - will be replaced with API
-const mockUsers: User[] = [
-  {
-    id: '1',
-    email: 'strategize@actuatemedia.com',
-    firstName: 'Strategy',
-    lastName: 'Admin',
-    role: 'SUPERADMIN',
-    avatar: '',
-    isActive: true,
-    lastLoginAt: new Date().toISOString(),
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    email: 'brad@actuatemedia.com',
-    firstName: 'Brad',
-    lastName: 'Holly',
-    role: 'ADMIN',
-    avatar: '',
-    isActive: true,
-    lastLoginAt: new Date(Date.now() - 86400000).toISOString(),
-    createdAt: '2024-01-15T00:00:00Z',
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    email: 'team@actuatemedia.com',
-    firstName: 'Team',
-    lastName: 'Member',
-    role: 'USER',
-    avatar: '',
-    isActive: true,
-    lastLoginAt: new Date(Date.now() - 172800000).toISOString(),
-    createdAt: '2024-02-01T00:00:00Z',
-    updatedAt: new Date().toISOString(),
-  },
-];
 
 const roleConfig: Record<UserRole, { label: string; icon: typeof Shield; color: string; variant: 'default' | 'success' | 'warning' | 'error' | 'info' }> = {
   SUPERADMIN: { label: 'Super Admin', icon: ShieldCheck, color: 'text-purple-600', variant: 'default' },
@@ -67,7 +28,9 @@ const roleConfig: Record<UserRole, { label: string; icon: typeof Shield; color: 
 
 export default function UsersPage() {
   const { data: session, status } = useSession();
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -75,15 +38,45 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
+  const fetchUsers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/users');
+      if (!res.ok) throw new Error('Failed to fetch users');
+      const data = await res.json();
+      setUsers(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
   // Check if user has permission to view this page
   const userRole = session?.user?.role;
   const canManageUsers = userRole === 'SUPERADMIN' || userRole === 'ADMIN';
   const isSuperAdmin = userRole === 'SUPERADMIN';
 
-  if (status === 'loading') {
+  if (status === 'loading' || isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">{error}</p>
+          <Button onClick={fetchUsers}>Retry</Button>
+        </div>
       </div>
     );
   }
@@ -106,34 +99,57 @@ export default function UsersPage() {
     setDropdownOpen(null);
   };
 
-  const handleUpdateRole = (userId: string, newRole: UserRole) => {
-    setUsers(users.map(u => 
-      u.id === userId ? { ...u, role: newRole, updatedAt: new Date().toISOString() } : u
-    ));
-    setIsEditModalOpen(false);
-    setSelectedUser(null);
+  const handleUpdateRole = async (userId: string, newRole: UserRole) => {
+    try {
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+      const res = await fetch(`/api/users/${user.email}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole }),
+      });
+      if (!res.ok) throw new Error('Failed to update user');
+      await fetchUsers();
+      setIsEditModalOpen(false);
+      setSelectedUser(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update user');
+    }
   };
 
-  const handleToggleActive = (userId: string) => {
-    setUsers(users.map(u => 
-      u.id === userId ? { ...u, isActive: !u.isActive, updatedAt: new Date().toISOString() } : u
-    ));
-    setDropdownOpen(null);
+  const handleToggleActive = async (userId: string) => {
+    try {
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+      const res = await fetch(`/api/users/${user.email}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !user.isActive }),
+      });
+      if (!res.ok) throw new Error('Failed to update user');
+      await fetchUsers();
+      setDropdownOpen(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to update user');
+    }
   };
 
-  const handleInviteUser = (email: string, role: UserRole) => {
-    const newUser: User = {
-      id: String(Date.now()),
-      email,
-      firstName: email.split('@')[0] ?? '',
-      lastName: '',
-      role,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setUsers([...users, newUser]);
-    setIsInviteModalOpen(false);
+  const handleInviteUser = async (email: string, role: UserRole) => {
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to invite user');
+      }
+      await fetchUsers();
+      setIsInviteModalOpen(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to invite user');
+    }
   };
 
   const formatDate = (dateString: string) => {

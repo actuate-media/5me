@@ -1,28 +1,22 @@
 import { notFound } from 'next/navigation';
+import prisma from '@/lib/prisma';
 import { ReviewLandingClient } from './review-landing-client';
 
-// Mock data - replace with database lookup
+export const dynamic = 'force-dynamic';
+
 async function getCompanyBySlug(slug: string) {
-  const companies: Record<string, { id: string; name: string; slug: string; logo?: string }> = {
-    'actuate-media': { id: '1', name: 'Actuate Media', slug: 'actuate-media' },
-    'seattle-coffee-co': { id: '2', name: 'Seattle Coffee Co', slug: 'seattle-coffee-co' },
-  };
-  return companies[slug] || null;
+  return prisma.company.findUnique({
+    where: { slug },
+    select: { id: true, name: true, slug: true, logo: true },
+  });
 }
 
 async function getLocationsByCompany(companyId: string) {
-  const locations: Record<string, Array<{ id: string; name: string; slug: string; address?: string }>> = {
-    '1': [
-      { id: 'loc1', name: 'Seattle HQ', slug: 'seattle', address: '123 Main St, Seattle, WA' },
-      { id: 'loc2', name: 'Portland Office', slug: 'portland', address: '456 Oak Ave, Portland, OR' },
-      { id: 'loc3', name: 'San Francisco', slug: 'san-francisco', address: '789 Market St, San Francisco, CA' },
-    ],
-    '2': [
-      { id: 'loc4', name: 'Downtown', slug: 'downtown', address: '100 Pike Place, Seattle, WA' },
-      { id: 'loc5', name: 'Capitol Hill', slug: 'capitol-hill', address: '200 Broadway, Seattle, WA' },
-    ],
-  };
-  return locations[companyId] || [];
+  return prisma.location.findMany({
+    where: { companyId },
+    select: { id: true, name: true, slug: true, address: true },
+    take: 100,
+  });
 }
 
 interface PageProps {
@@ -39,7 +33,18 @@ export default async function ReviewLandingPage({ params }: PageProps) {
 
   const locations = await getLocationsByCompany(company.id);
 
-  return <ReviewLandingClient company={company} locations={locations} />;
+  // Transform null to undefined for client component compatibility
+  const clientCompany = {
+    ...company,
+    logo: company.logo ?? undefined,
+  };
+
+  const clientLocations = locations.map(loc => ({
+    ...loc,
+    address: loc.address ?? undefined,
+  }));
+
+  return <ReviewLandingClient company={clientCompany} locations={clientLocations} />;
 }
 
 export async function generateMetadata({ params }: PageProps) {
