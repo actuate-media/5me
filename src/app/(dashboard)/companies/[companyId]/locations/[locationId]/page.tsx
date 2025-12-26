@@ -443,29 +443,48 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
         label="Review URL"
         value={formData.url}
         onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-        placeholder="https://g.page/your-business/review"
+        placeholder={formData.type === 'google' 
+          ? 'https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID' 
+          : 'https://example.com/your-business/review'}
         required
       />
 
-      <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-        <p className="font-medium text-gray-900 mb-2">How to get your review link:</p>
+      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm">
+        <p className="font-semibold text-gray-900 mb-2">How to get your review link:</p>
         {formData.type === 'google' && (
-          <p>Go to Google Business Profile → Get more reviews → Copy the link</p>
+          <div className="space-y-3">
+            <p className="text-gray-700">
+              Google review links use a <strong>Place ID</strong> — a unique identifier for your business location. 
+              The URL format is:
+            </p>
+            <code className="block bg-white px-3 py-2 rounded border border-blue-200 text-xs text-gray-800 font-mono">
+              https://search.google.com/local/writereview?placeid=<span className="text-indigo-600">YOUR_PLACE_ID</span>
+            </code>
+            <div className="pt-2 border-t border-blue-200">
+              <p className="font-medium text-gray-800 mb-1">To find your Place ID:</p>
+              <ol className="list-decimal list-inside space-y-1 text-gray-600">
+                <li>Go to <a href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline font-medium">Google Place ID Finder ↗</a></li>
+                <li>Search for your business name and address</li>
+                <li>Copy the Place ID (starts with "ChIJ...")</li>
+                <li>Paste it into the URL above</li>
+              </ol>
+            </div>
+          </div>
         )}
         {formData.type === 'facebook' && (
-          <p>Go to your Facebook Page → Reviews tab → Copy the page URL</p>
+          <p className="text-gray-700">Go to your Facebook Page → Reviews tab → Copy the page URL</p>
         )}
         {formData.type === 'yelp' && (
-          <p>Go to your Yelp business page → Copy the URL</p>
+          <p className="text-gray-700">Go to your Yelp business page → Copy the URL</p>
         )}
         {formData.type === 'tripadvisor' && (
-          <p>Go to your TripAdvisor listing → Copy the URL</p>
+          <p className="text-gray-700">Go to your TripAdvisor listing → Copy the URL</p>
         )}
         {formData.type === 'clutch' && (
-          <p>Go to your Clutch profile → Reviews → Copy the review link</p>
+          <p className="text-gray-700">Go to your Clutch profile → Reviews → Copy the review link</p>
         )}
         {formData.type === 'other' && (
-          <p>Enter the direct URL where customers can leave a review</p>
+          <p className="text-gray-700">Enter the direct URL where customers can leave a review</p>
         )}
       </div>
 
