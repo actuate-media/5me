@@ -317,7 +317,6 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
   const locationCount = company._count?.locations ?? company.locationCount ?? 0;
   const sourceCount = company.sourceCount ?? 0;
   const reviewUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/reviews/${company.slug}`;
-  const isSingleLocation = locationCount === 1;
 
   const handleCopyUrl = async () => {
     try {
@@ -344,75 +343,78 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
   return (
     <Card 
       variant="bordered" 
-      className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all duration-200 flex flex-col"
+      className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-300 transition-all duration-200 group"
     >
-      {/* Logo/Avatar Section */}
-      <div className="pt-6 pb-4 flex justify-center">
-        {company.logo ? (
-          <img 
-            src={company.logo} 
-            alt={company.name} 
-            className="h-20 w-20 rounded-full object-cover border-4 border-white shadow-md"
-          />
-        ) : (
-          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md">
-            <span className="text-white text-2xl font-bold">{initials}</span>
+      {/* Main Content */}
+      <div className="p-4">
+        {/* Header: Logo + Name */}
+        <div className="flex items-center gap-3 mb-3">
+          {company.logo ? (
+            <img 
+              src={company.logo} 
+              alt={company.name} 
+              className="h-12 w-12 rounded-lg object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-lg font-bold">{initials}</span>
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-gray-900 truncate text-base" title={company.name}>
+              {company.name}
+            </h3>
+            <p className="text-xs text-gray-500">{company.slug}</p>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Company Name */}
-      <div className="px-5 pb-2 text-center">
-        <h3 className="font-bold text-lg text-gray-900 truncate" title={company.name}>
-          {company.name}
-        </h3>
-      </div>
-
-      {/* Review URL */}
-      <div className="px-5 pb-4">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-xs text-gray-400 uppercase tracking-wide font-medium">URL</span>
-          <span className="text-sm text-gray-600 truncate max-w-[140px] font-mono" title={`/reviews/${company.slug}`}>
+        {/* URL Row */}
+        <div className="flex items-center gap-2 mb-3 bg-gray-50 rounded-lg px-3 py-2">
+          <Globe className="h-4 w-4 text-gray-400 flex-shrink-0" />
+          <span className="text-sm text-gray-600 truncate flex-1 font-mono">
             /reviews/{company.slug}
           </span>
           <button
             onClick={handleCopyUrl}
-            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-            title="Copy URL"
+            className={cn(
+              "p-1.5 rounded-md transition-all flex-shrink-0",
+              copied 
+                ? "bg-green-100 text-green-600" 
+                : "text-gray-400 hover:text-indigo-600 hover:bg-white"
+            )}
+            title={copied ? "Copied!" : "Copy URL"}
           >
-            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </button>
           <button
             onClick={handleOpenUrl}
-            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-md transition-all flex-shrink-0"
             title="Open in new tab"
           >
             <ExternalLink className="h-4 w-4" />
           </button>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="px-5 pb-5">
-        <div className="flex items-center justify-center gap-6">
-          <div className="flex items-center gap-1.5 text-sm text-gray-600">
-            <MapPin className="h-4 w-4 text-gray-400" />
-            <span className="font-medium">{locationCount}</span>
-            <span className="text-gray-400">{locationCount === 1 ? 'Location' : 'Locations'}</span>
+        {/* Stats Row */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <MapPin className="h-4 w-4 text-indigo-500" />
+            <span className="text-sm font-medium text-gray-700">{locationCount}</span>
+            <span className="text-sm text-gray-400">{locationCount === 1 ? 'Location' : 'Locations'}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-sm text-gray-600">
-            <Globe className="h-4 w-4 text-gray-400" />
-            <span className="font-medium">{sourceCount}</span>
-            <span className="text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
+          <div className="flex items-center gap-1.5">
+            <Globe className="h-4 w-4 text-indigo-500" />
+            <span className="text-sm font-medium text-gray-700">{sourceCount}</span>
+            <span className="text-sm text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
           </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-2 bg-gray-50/70">
+      {/* Actions Bar */}
+      <div className="border-t border-gray-100 bg-gray-50/80 px-2 py-2 flex items-center justify-around">
         <ActionButton 
           icon={Edit} 
-          label="Edit" 
+          label="Edit Company" 
           onClick={onEdit}
         />
         <ActionButton 
@@ -453,14 +455,14 @@ function ActionButton({ icon: Icon, label, onClick, variant = 'default' }: Actio
     <button
       onClick={onClick}
       className={cn(
-        'p-2 rounded-lg transition-colors group relative',
+        'p-2.5 rounded-lg transition-all duration-200',
         variant === 'danger' 
           ? 'text-gray-400 hover:text-red-600 hover:bg-red-50' 
           : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'
       )}
       title={label}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-5 w-5" />
       <span className="sr-only">{label}</span>
     </button>
   );

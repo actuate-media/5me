@@ -271,83 +271,93 @@ function LocationCard({
   };
 
   return (
-    <Card className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all duration-200 flex flex-col">
-      {/* Avatar Section */}
-      <div className="pt-6 pb-4 flex justify-center">
-        <div className="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md">
-          <span className="text-white text-2xl font-bold">{initials}</span>
+    <Card className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-300 transition-all duration-200 group">
+      {/* Main Content */}
+      <div className="p-4">
+        {/* Header: Avatar + Name */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-lg font-bold">{initials}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-gray-900 truncate text-base" title={location.name}>
+              {location.name}
+            </h3>
+            {location.city && (
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {location.city}{location.state ? `, ${location.state}` : ''}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Location Name */}
-      <div className="px-5 pb-2 text-center">
-        <h3 className="font-bold text-lg text-gray-900 truncate" title={location.name}>
-          {location.name}
-        </h3>
-      </div>
-
-      {/* Review URL */}
-      <div className="px-5 pb-3">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-xs text-gray-400 uppercase tracking-wide font-medium">URL</span>
-          <span className="text-sm text-gray-600 truncate max-w-[120px] font-mono" title={`/reviews/${companySlug}/${location.slug}`}>
+        {/* URL Row */}
+        <div className="flex items-center gap-2 mb-3 bg-gray-50 rounded-lg px-3 py-2">
+          <Globe className="h-4 w-4 text-gray-400 flex-shrink-0" />
+          <span className="text-sm text-gray-600 truncate flex-1 font-mono">
             /{companySlug}/{location.slug}
           </span>
           <button
             onClick={handleCopyUrl}
-            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
-            title="Copy URL"
+            className={cn(
+              "p-1.5 rounded-md transition-all flex-shrink-0",
+              copied 
+                ? "bg-green-100 text-green-600" 
+                : "text-gray-400 hover:text-indigo-600 hover:bg-white"
+            )}
+            title={copied ? "Copied!" : "Copy URL"}
           >
-            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </button>
           <button
             onClick={handleOpenUrl}
-            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-md transition-all flex-shrink-0"
             title="Open in new tab"
           >
             <ExternalLink className="h-4 w-4" />
           </button>
         </div>
-      </div>
 
-      {/* Source Count */}
-      <div className="px-5 pb-5">
-        <div className="flex items-center justify-center gap-1.5 text-sm text-gray-600">
-          <Globe className="h-4 w-4 text-gray-400" />
-          <span className="font-medium">{sourceCount}</span>
-          <span className="text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
+        {/* Stats Row */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <Globe className="h-4 w-4 text-indigo-500" />
+            <span className="text-sm font-medium text-gray-700">{sourceCount}</span>
+            <span className="text-sm text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
+          </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-2 bg-gray-50/70">
+      {/* Actions Bar */}
+      <div className="border-t border-gray-100 bg-gray-50/80 px-2 py-2 flex items-center justify-around">
         <button
           onClick={onEdit}
-          className="p-2 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+          className="p-2.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
           title="Edit Location"
         >
-          <Edit className="h-4 w-4" />
+          <Edit className="h-5 w-5" />
         </button>
         <button
           onClick={() => {/* TODO: Email templates for location */}}
-          className="p-2 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+          className="p-2.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
           title="Email Templates"
         >
-          <Mail className="h-4 w-4" />
+          <Mail className="h-5 w-5" />
         </button>
         <Link 
           href={`/companies/${companyId}/locations/${location.id}`}
-          className="p-2 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+          className="p-2.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
           title="Manage Review Sources"
         >
-          <Settings className="h-4 w-4" />
+          <Settings className="h-5 w-5" />
         </Link>
         <button
           onClick={onDelete}
-          className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+          className="p-2.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
           title="Delete Location"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-5 w-5" />
         </button>
       </div>
     </Card>
