@@ -5,14 +5,18 @@ import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from
 import 'react-image-crop/dist/ReactCrop.css';
 import { Button } from './Button';
 import { Modal } from './Modal';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { Upload, X, Loader2, Crop as CropIcon, Maximize } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+type FitMode = 'crop' | 'fit';
+type BackgroundColor = 'transparent' | 'white' | 'black' | 'auto';
 
 interface ImageCropperProps {
   value?: string;
   onChange: (url: string) => void;
   onRemove?: () => void;
   aspectRatio?: number;
-  maxSize?: number;
+  outputSize?: number;
   className?: string;
 }
 
@@ -32,6 +36,7 @@ function centerAspectCrop(mediaWidth: number, mediaHeight: number, aspect: numbe
   );
 }
 
+// Get cropped image (crop mode)
 async function getCroppedImg(
   image: HTMLImageElement,
   crop: PixelCrop,
@@ -44,11 +49,9 @@ async function getCroppedImg(
     throw new Error('No 2d context');
   }
 
-  // Set canvas to desired output size (square)
   canvas.width = outputSize;
   canvas.height = outputSize;
 
-  // Draw the cropped image scaled to fit the canvas
   ctx.drawImage(
     image,
     crop.x,
@@ -76,11 +79,89 @@ async function getCroppedImg(
   });
 }
 
+// Fit image to square with padding (fit mode)
+async function getFittedImg(
+  image: HTMLImageElement,
+  backgroundColor: BackgroundColor,
+  outputSize: number = 256
+): Promise<Blob> {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('No 2d context');
+  }
+
+  canvas.width = outputSize;
+  canvas.height = outputSize;
+
+  // Fill background
+  if (backgroundColor === 'white') {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, outputSize, outputSize);
+  } else if (backgroundColor === 'black') {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, outputSize, outputSize);
+  } else if (backgroundColor === 'auto') {
+    // Sample corner pixels for average color
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    if (tempCtx) {
+      tempCanvas.width = image.naturalWidth;
+      tempCanvas.height = image.naturalHeight;
+      tempCtx.drawImage(image, 0, 0);
+      
+      const corners = [
+        tempCtx.getImageData(0, 0, 1, 1).data,
+        tempCtx.getImageData(image.naturalWidth - 1, 0, 1, 1).data,
+        tempCtx.getImageData(0, image.naturalHeight - 1, 1, 1).data,
+        tempCtx.getImageData(image.naturalWidth - 1, image.naturalHeight - 1, 1, 1).data,
+      ];
+      
+      const avgR = Math.round(corners.reduce((sum, c) => sum + (c[0] ?? 0), 0) / 4);
+      const avgG = Math.round(corners.reduce((sum, c) => sum + (c[1] ?? 0), 0) / 4);
+      const avgB = Math.round(corners.reduce((sum, c) => sum + (c[2] ?? 0), 0) / 4);
+      
+      ctx.fillStyle = `rgb(${avgR}, ${avgG}, ${avgB})`;
+      ctx.fillRect(0, 0, outputSize, outputSize);
+    }
+  }
+  // transparent = no fill, just leave canvas transparent
+
+  // Calculate scaled dimensions to fit within square
+  const imgWidth = image.naturalWidth;
+  const imgHeight = image.naturalHeight;
+  const scale = Math.min(outputSize / imgWidth, outputSize / imgHeight);
+  const scaledWidth = imgWidth * scale;
+  const scaledHeight = imgHeight * scale;
+
+  // Center the image
+  const x = (outputSize - scaledWidth) / 2;
+  const y = (outputSize - scaledHeight) / 2;
+
+  ctx.drawImage(image, 0, 0, imgWidth, imgHeight, x, y, scaledWidth, scaledHeight);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Canvas is empty'));
+        }
+      },
+      'image/png',
+      0.95
+    );
+  });
+}
+
 export function ImageCropper({
   value,
   onChange,
   onRemove,
   aspectRatio = 1,
+  outputSize = 256,
   className,
 }: ImageCropperProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -88,6 +169,9 @@ export function ImageCropper({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<FitMode>('crop');
+  const [bgColor, setBgColor] = useState<BackgroundColor>('white');
+  const [fitPreview, setFitPreview] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -95,20 +179,19 @@ export function ImageCropper({
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       
-      // Validate file type
       if (!file) return;
       if (!file.type.startsWith('image/')) {
         setError('Please select an image file');
         return;
       }
 
-      // Validate file size (4MB max)
       if (file.size > 4 * 1024 * 1024) {
         setError('Image must be less than 4MB');
         return;
       }
 
       setError(null);
+      setMode('crop');
       const reader = new FileReader();
       reader.addEventListener('load', () => {
         setImageSrc(reader.result as string);
@@ -122,36 +205,67 @@ export function ImageCropper({
     (e: React.SyntheticEvent<HTMLImageElement>) => {
       const { width, height } = e.currentTarget;
       setCrop(centerAspectCrop(width, height, aspectRatio));
+      updateFitPreview();
     },
     [aspectRatio]
   );
 
-  const handleCropComplete = async () => {
-    if (!imgRef.current || !crop) return;
+  const updateFitPreview = useCallback(async () => {
+    if (!imgRef.current) return;
+    try {
+      const blob = await getFittedImg(imgRef.current, bgColor, outputSize);
+      const url = URL.createObjectURL(blob);
+      setFitPreview(url);
+    } catch {
+      // Ignore preview errors
+    }
+  }, [bgColor, outputSize]);
+
+  // Update fit preview when background color changes
+  const handleBgColorChange = (color: BackgroundColor) => {
+    setBgColor(color);
+    if (imgRef.current) {
+      getFittedImg(imgRef.current, color, outputSize).then(blob => {
+        const url = URL.createObjectURL(blob);
+        setFitPreview(url);
+      }).catch(() => {});
+    }
+  };
+
+  const handleSave = async () => {
+    if (!imgRef.current) return;
 
     try {
       setIsUploading(true);
       setError(null);
 
-      // Convert crop to pixels
-      const image = imgRef.current;
-      const scaleX = image.naturalWidth / image.width;
-      const scaleY = image.naturalHeight / image.height;
+      let blob: Blob;
 
-      const pixelCrop: PixelCrop = {
-        unit: 'px',
-        x: (crop.x ?? 0) * scaleX * image.width / 100,
-        y: (crop.y ?? 0) * scaleY * image.height / 100,
-        width: (crop.width ?? 0) * scaleX * image.width / 100,
-        height: (crop.height ?? 0) * scaleY * image.height / 100,
-      };
+      if (mode === 'fit') {
+        // Fit mode - scale to fit with padding
+        blob = await getFittedImg(imgRef.current, bgColor, outputSize);
+      } else {
+        // Crop mode
+        if (!crop) return;
+        
+        const image = imgRef.current;
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
 
-      // Get cropped image blob
-      const croppedBlob = await getCroppedImg(image, pixelCrop, 256);
+        const pixelCrop: PixelCrop = {
+          unit: 'px',
+          x: (crop.x ?? 0) * scaleX * image.width / 100,
+          y: (crop.y ?? 0) * scaleY * image.height / 100,
+          width: (crop.width ?? 0) * scaleX * image.width / 100,
+          height: (crop.height ?? 0) * scaleY * image.height / 100,
+        };
+
+        blob = await getCroppedImg(image, pixelCrop, outputSize);
+      }
 
       // Upload to server
       const formData = new FormData();
-      formData.append('file', croppedBlob, 'logo.png');
+      formData.append('file', blob, 'logo.png');
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -165,8 +279,7 @@ export function ImageCropper({
 
       const { url } = await response.json();
       onChange(url);
-      setIsModalOpen(false);
-      setImageSrc(null);
+      handleCancel();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload image');
     } finally {
@@ -178,6 +291,7 @@ export function ImageCropper({
     setIsModalOpen(false);
     setImageSrc(null);
     setCrop(undefined);
+    setFitPreview(null);
     if (inputRef.current) {
       inputRef.current.value = '';
     }
@@ -239,15 +353,47 @@ export function ImageCropper({
       <Modal
         isOpen={isModalOpen}
         onClose={handleCancel}
-        title="Crop Image"
+        title="Adjust Logo"
         size="lg"
       >
         <div className="space-y-4">
+          {/* Mode Toggle */}
+          <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+            <button
+              type="button"
+              onClick={() => setMode('crop')}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                mode === 'crop'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              )}
+            >
+              <CropIcon className="h-4 w-4" />
+              Crop
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('fit'); updateFitPreview(); }}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                mode === 'fit'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              )}
+            >
+              <Maximize className="h-4 w-4" />
+              Fit
+            </button>
+          </div>
+
           <p className="text-sm text-gray-600">
-            Drag to adjust the crop area. The image will be saved as a square.
+            {mode === 'crop' 
+              ? 'Drag to adjust the crop area. Part of the image will be trimmed.'
+              : 'The entire logo will be scaled to fit within a square.'}
           </p>
 
-          {imageSrc && (
+          {imageSrc && mode === 'crop' && (
             <div className="flex justify-center bg-gray-100 rounded-lg p-4">
               <ReactCrop
                 crop={crop}
@@ -266,13 +412,67 @@ export function ImageCropper({
             </div>
           )}
 
+          {imageSrc && mode === 'fit' && (
+            <>
+              {/* Background color options */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">Background:</span>
+                <div className="flex gap-2">
+                  {(['white', 'transparent', 'black', 'auto'] as BackgroundColor[]).map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => handleBgColorChange(color)}
+                      className={cn(
+                        'w-8 h-8 rounded-md border-2 transition-all',
+                        bgColor === color ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-300',
+                        color === 'white' && 'bg-white',
+                        color === 'black' && 'bg-black',
+                        color === 'transparent' && 'bg-[url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%228%22%20height%3D%228%22%3E%3Crect%20width%3D%224%22%20height%3D%224%22%20fill%3D%22%23ccc%22%2F%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%224%22%20height%3D%224%22%20fill%3D%22%23ccc%22%2F%3E%3C%2Fsvg%3E")]',
+                        color === 'auto' && 'bg-gradient-to-br from-gray-200 to-gray-400'
+                      )}
+                      title={color === 'auto' ? 'Auto (sample from image)' : color}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-gray-500 capitalize">{bgColor === 'auto' ? 'Auto-detect' : bgColor}</span>
+              </div>
+
+              {/* Fit preview */}
+              <div className="flex justify-center bg-gray-100 rounded-lg p-4">
+                <div className="relative">
+                  {/* Hidden image for ref */}
+                  <img
+                    ref={imgRef}
+                    src={imageSrc}
+                    alt="Source"
+                    onLoad={onImageLoad}
+                    className="hidden"
+                  />
+                  {/* Preview */}
+                  {fitPreview ? (
+                    <img
+                      src={fitPreview}
+                      alt="Fit preview"
+                      className="w-64 h-64 rounded-lg border border-gray-300"
+                    />
+                  ) : (
+                    <div className="w-64 h-64 rounded-lg border border-gray-300 flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
             <Button
               type="button"
-              onClick={handleCropComplete}
+              onClick={handleSave}
               disabled={isUploading}
             >
               {isUploading ? (
