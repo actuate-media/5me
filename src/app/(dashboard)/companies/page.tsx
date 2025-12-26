@@ -333,78 +333,83 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
     window.open(reviewUrl, '_blank', 'noopener,noreferrer');
   };
 
+  // Generate initials from company name
+  const initials = company.name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <Card 
       variant="bordered" 
-      className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all duration-200 flex flex-col min-w-[280px]"
+      className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all duration-200 flex flex-col"
     >
-      {/* Logo Section */}
-      <div className="p-5 pb-4 flex justify-center bg-gradient-to-b from-gray-50 to-white">
+      {/* Logo/Avatar Section */}
+      <div className="pt-6 pb-4 flex justify-center">
         {company.logo ? (
           <img 
             src={company.logo} 
             alt={company.name} 
-            className="h-16 w-auto max-w-[180px] object-contain"
+            className="h-20 w-20 rounded-full object-cover border-4 border-white shadow-md"
           />
         ) : (
-          <div className="h-16 w-16 rounded-xl bg-indigo-100 flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-indigo-600" />
+          <div className="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md">
+            <span className="text-white text-2xl font-bold">{initials}</span>
           </div>
         )}
       </div>
 
-      {/* Company Info */}
-      <div className="px-5 pb-3">
-        <h3 className="font-semibold text-gray-900 text-center truncate" title={company.name}>
+      {/* Company Name */}
+      <div className="px-5 pb-2 text-center">
+        <h3 className="font-bold text-lg text-gray-900 truncate" title={company.name}>
           {company.name}
         </h3>
       </div>
 
       {/* Review URL */}
-      <div className="px-5 pb-3">
-        <div className="flex items-center justify-center gap-2 text-xs">
-          <span className="text-gray-400 font-medium">URL</span>
-          <span className="text-gray-600 truncate max-w-[120px]" title={`/reviews/${company.slug}`}>
+      <div className="px-5 pb-4">
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-xs text-gray-400 uppercase tracking-wide font-medium">URL</span>
+          <span className="text-sm text-gray-600 truncate max-w-[140px] font-mono" title={`/reviews/${company.slug}`}>
             /reviews/{company.slug}
           </span>
           <button
             onClick={handleCopyUrl}
-            className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
             title="Copy URL"
           >
-            {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
           </button>
           <button
             onClick={handleOpenUrl}
-            className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
             title="Open in new tab"
           >
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ExternalLink className="h-4 w-4" />
           </button>
         </div>
-        {!isSingleLocation && locationCount > 0 && (
-          <p className="text-[10px] text-gray-400 text-center mt-1">
-            Multi-location directory
-          </p>
-        )}
       </div>
 
       {/* Stats */}
-      <div className="px-5 pb-4">
-        <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
-          <div className="flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5" />
-            <span>{locationCount} {locationCount === 1 ? 'Location' : 'Locations'}</span>
+      <div className="px-5 pb-5">
+        <div className="flex items-center justify-center gap-6">
+          <div className="flex items-center gap-1.5 text-sm text-gray-600">
+            <MapPin className="h-4 w-4 text-gray-400" />
+            <span className="font-medium">{locationCount}</span>
+            <span className="text-gray-400">{locationCount === 1 ? 'Location' : 'Locations'}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Globe className="h-3.5 w-3.5" />
-            <span>{sourceCount} {sourceCount === 1 ? 'Source' : 'Sources'}</span>
+          <div className="flex items-center gap-1.5 text-sm text-gray-600">
+            <Globe className="h-4 w-4 text-gray-400" />
+            <span className="font-medium">{sourceCount}</span>
+            <span className="text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
           </div>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-1 bg-gray-50/50">
+      <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-2 bg-gray-50/70">
         <ActionButton 
           icon={Edit} 
           label="Edit" 
@@ -412,13 +417,13 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
         />
         <ActionButton 
           icon={Mail} 
-          label="Email" 
+          label="Email Templates" 
           onClick={onEmail}
         />
         <Link href={`/companies/${company.id}/locations`} className="contents">
           <ActionButton 
             icon={Settings} 
-            label="Locations"
+            label="Manage Locations"
           />
         </Link>
         <ActionButton 

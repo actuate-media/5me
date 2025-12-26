@@ -2,13 +2,12 @@
 
 import { useState, use, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Card, Button, Input, Modal, Badge } from '@/components/ui';
+import { Card, Button, Input, Modal } from '@/components/ui';
 import { 
   ArrowLeft,
   MapPin, 
   Plus, 
   Search, 
-  MoreVertical,
   Edit,
   Trash2,
   ExternalLink,
@@ -18,7 +17,8 @@ import {
   Check,
   Loader2,
   X,
-  Mail
+  Mail,
+  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Company, Location } from '@/types';
@@ -243,97 +243,111 @@ function LocationCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const [showMenu, setShowMenu] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const reviewUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/reviews/${companySlug}/${location.slug}`;
+  const sourceCount = location._count?.sources ?? location.sourceCount ?? 0;
+  
+  // Generate initials from location name
+  const initials = location.name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
-  const copyUrl = () => {
-    navigator.clipboard.writeText(reviewUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(reviewUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleOpenUrl = () => {
+    window.open(reviewUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
-    <Card className="p-6 relative">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="font-semibold text-gray-900">{location.name}</h3>
-          <p className="text-sm text-gray-500">{location.slug}</p>
-        </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-1 rounded hover:bg-gray-100"
-          >
-            <MoreVertical className="h-5 w-5 text-gray-400" />
-          </button>
-          {showMenu && (
-            <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 w-48">
-              <button 
-                onClick={() => { onEdit(); setShowMenu(false); }}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <Edit className="h-4 w-4" /> Edit Location
-              </button>
-              <a
-                href={reviewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <ExternalLink className="h-4 w-4" /> Preview Review Page
-              </a>
-              <hr className="my-1" />
-              <button 
-                onClick={() => { onDelete(); setShowMenu(false); }}
-                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </button>
-            </div>
-          )}
+    <Card className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-200 transition-all duration-200 flex flex-col">
+      {/* Avatar Section */}
+      <div className="pt-6 pb-4 flex justify-center">
+        <div className="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md">
+          <span className="text-white text-2xl font-bold">{initials}</span>
         </div>
       </div>
 
-      {(location.address || location.city) && (
-        <div className="flex items-start gap-2 text-sm text-gray-600 mb-3">
-          <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <span>
-            {location.address && <>{location.address}<br /></>}
-            {location.city}, {location.state} {location.zip}
+      {/* Location Name */}
+      <div className="px-5 pb-2 text-center">
+        <h3 className="font-bold text-lg text-gray-900 truncate" title={location.name}>
+          {location.name}
+        </h3>
+      </div>
+
+      {/* Review URL */}
+      <div className="px-5 pb-3">
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-xs text-gray-400 uppercase tracking-wide font-medium">URL</span>
+          <span className="text-sm text-gray-600 truncate max-w-[120px] font-mono" title={`/reviews/${companySlug}/${location.slug}`}>
+            /{companySlug}/{location.slug}
           </span>
+          <button
+            onClick={handleCopyUrl}
+            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+            title="Copy URL"
+          >
+            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+          </button>
+          <button
+            onClick={handleOpenUrl}
+            className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+            title="Open in new tab"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </button>
         </div>
-      )}
-
-      <div className="flex items-center gap-2 mb-4">
-        <Badge variant={(location._count?.sources ?? location.sourceCount ?? 0) > 0 ? 'success' : 'default'}>
-          {location._count?.sources ?? location.sourceCount ?? 0} sources
-        </Badge>
       </div>
 
-      <div className="space-y-2">
-        <Link
-          href={`/companies/${companyId}/locations/${location.id}`}
-          className="block w-full text-center py-2 px-4 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+      {/* Source Count */}
+      <div className="px-5 pb-5">
+        <div className="flex items-center justify-center gap-1.5 text-sm text-gray-600">
+          <Globe className="h-4 w-4 text-gray-400" />
+          <span className="font-medium">{sourceCount}</span>
+          <span className="text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="border-t border-gray-100 px-4 py-3 flex items-center justify-center gap-2 bg-gray-50/70">
+        <button
+          onClick={onEdit}
+          className="p-2 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+          title="Edit Location"
         >
-          Manage Sources
+          <Edit className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => {/* TODO: Email templates for location */}}
+          className="p-2 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+          title="Email Templates"
+        >
+          <Mail className="h-4 w-4" />
+        </button>
+        <Link 
+          href={`/companies/${companyId}/locations/${location.id}`}
+          className="p-2 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+          title="Manage Review Sources"
+        >
+          <Settings className="h-4 w-4" />
         </Link>
         <button
-          onClick={copyUrl}
-          className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          onClick={onDelete}
+          className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+          title="Delete Location"
         >
-          {copied ? (
-            <>
-              <Check className="h-4 w-4 text-green-600" />
-              <span className="text-green-600">Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy className="h-4 w-4" />
-              Copy Review Link
-            </>
-          )}
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
     </Card>
