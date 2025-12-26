@@ -7,7 +7,13 @@ export const dynamic = 'force-dynamic';
 async function getLocationBySlug(companySlug: string, locationSlug: string) {
   const company = await prisma.company.findUnique({
     where: { slug: companySlug },
-    select: { id: true, name: true, slug: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      logo: true,
+      _count: { select: { locations: true } },
+    },
   });
   
   if (!company) return null;
@@ -28,6 +34,8 @@ async function getLocationBySlug(companySlug: string, locationSlug: string) {
     slug: location.slug,
     companyName: company.name,
     companySlug: company.slug,
+    companyLogo: company.logo,
+    companyLocationsCount: company._count.locations,
   };
 }
 

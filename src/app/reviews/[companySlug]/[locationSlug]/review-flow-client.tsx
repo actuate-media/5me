@@ -14,6 +14,8 @@ interface Location {
   slug: string;
   companyName: string;
   companySlug: string;
+  companyLogo?: string | null;
+  companyLocationsCount: number;
 }
 
 interface Source {
@@ -91,26 +93,52 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
 
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-md">
-          {/* Back button */}
-          <Link
-            href={`/reviews/${location.companySlug}`}
-            className="inline-flex items-center gap-2 text-gray-300 hover:text-white mb-8 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to locations
-          </Link>
+          {/* Top bar */}
+          <div className="flex items-center justify-between mb-6">
+            <a
+              href="https://5me.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="5me.io"
+              className="inline-flex items-center"
+            >
+              <img
+                src="/assets/logos/5me-logo.svg"
+                alt="5me.io"
+                className="h-7 w-auto"
+              />
+            </a>
 
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">{location.companyName}</h1>
-            <p className="text-gray-300">{location.name}</p>
+            {location.companyLocationsCount > 1 && (
+              <Link
+                href={`/reviews/${location.companySlug}`}
+                className="inline-flex items-center gap-2 text-gray-200 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to locations
+              </Link>
+            )}
           </div>
 
           {step === 'rating' && (
-            <Card className="p-8 bg-white/10 backdrop-blur-sm border border-white/20">
-              <h2 className="text-xl font-semibold text-white text-center mb-6">
-                How was your experience?
-              </h2>
+            <Card className="p-8 bg-white border border-gray-200 shadow-sm">
+              <div className="flex flex-col items-center text-center mb-6">
+                {location.companyLogo ? (
+                  <img
+                    src={location.companyLogo}
+                    alt={location.companyName}
+                    className="h-10 w-auto mb-4"
+                  />
+                ) : (
+                  <div className="text-sm font-medium text-gray-700 mb-4">{location.companyName}</div>
+                )}
+
+                <h2 className="text-xl font-semibold text-gray-900">
+                  How was your experience?
+                </h2>
+                <p className="text-sm text-gray-500">Please rate your experience</p>
+              </div>
+
               <div className="flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((value) => (
                   <button
@@ -125,16 +153,18 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                       className={cn(
                         'h-10 w-10 transition-colors',
                         (hoveredRating || rating) >= value
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-400'
+                          ? 'fill-[#ee5f64] text-[#ee5f64]'
+                          : 'text-gray-300'
                       )}
                     />
                   </button>
                 ))}
               </div>
-              <p className="text-center text-gray-400 mt-4 text-sm">
-                Click a star to rate your experience
-              </p>
+
+              <div className="mt-6 text-center">
+                <div className="text-sm font-medium text-gray-900">{location.companyName}</div>
+                <div className="text-sm text-gray-500">{location.name}</div>
+              </div>
             </Card>
           )}
 
