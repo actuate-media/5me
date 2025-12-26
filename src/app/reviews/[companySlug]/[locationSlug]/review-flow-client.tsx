@@ -127,10 +127,10 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                   <img
                     src={location.companyLogo}
                     alt={location.companyName}
-                    className="h-48 w-auto mb-6"
+                    className="h-48 w-auto mb-2"
                   />
                 ) : (
-                  <div className="text-2xl font-bold text-gray-800 mb-6">{location.companyName}</div>
+                  <div className="text-2xl font-bold text-gray-800 mb-2">{location.companyName}</div>
                 )}
 
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -151,7 +151,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                   >
                     <Star
                       className={cn(
-                        'h-14 w-14 transition-colors',
+                        'h-16 w-16 transition-colors',
                         (hoveredRating || rating) >= value
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-300'
