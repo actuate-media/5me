@@ -6,6 +6,7 @@ import { ArrowLeft, Star, ExternalLink, X } from 'lucide-react';
 import { StarfieldBackground } from '@/components/ui/StarfieldBackground';
 import { Button, Input, Card } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { getReviewSourceLogoSrc } from '@/lib/review-source-logos';
 
 interface Location {
   id: string;
@@ -31,9 +32,25 @@ const SOURCE_ICONS: Record<string, string> = {
   google: '🔍',
   facebook: '📘',
   yelp: '⭐',
-  tripadvisor: '🦉',
   clutch: '🏆',
 };
+
+function getSourceIcon(type: string) {
+  return SOURCE_ICONS[type.toLowerCase()] ?? '⭐';
+}
+
+function SourceLogo({ type, name }: { type: string; name: string }) {
+  const logoSrc = getReviewSourceLogoSrc(type);
+  if (!logoSrc) return <span className="text-2xl">{getSourceIcon(type)}</span>;
+
+  return (
+    <img
+      src={logoSrc}
+      alt={name}
+      className="h-7 w-7"
+    />
+  );
+}
 
 export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
   const [step, setStep] = useState<'rating' | 'feedback' | 'sources'>('rating');
@@ -69,7 +86,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-gray-900 to-[#586c96]">
+    <div className="min-h-screen relative overflow-hidden bg-linear-to-b from-gray-900 to-[#586c96]">
       <StarfieldBackground />
 
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
@@ -101,6 +118,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                     onClick={() => handleRatingClick(value)}
                     onMouseEnter={() => setHoveredRating(value)}
                     onMouseLeave={() => setHoveredRating(0)}
+                    aria-label={`Rate ${value} star${value === 1 ? '' : 's'}`}
                     className="p-2 transition-transform hover:scale-110"
                   >
                     <Star
@@ -178,6 +196,8 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
           <Card className="w-full max-w-md p-6 bg-white relative">
             <button
               onClick={() => setShowSourceModal(false)}
+              aria-label="Close"
+              title="Close"
               className="absolute top-4 right-4 p-1 rounded hover:bg-gray-100"
             >
               <X className="h-5 w-5 text-gray-400" />
@@ -198,7 +218,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                   className="w-full p-4 border border-gray-200 rounded-lg hover:border-[#ee5f64] hover:bg-[#fef2f2] transition-colors flex items-center justify-between group"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{SOURCE_ICONS[source.type] || '📝'}</span>
+                    <SourceLogo type={source.type} name={source.name} />
                     <span className="font-medium text-gray-900">{source.name}</span>
                   </div>
                   <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#ee5f64]" />

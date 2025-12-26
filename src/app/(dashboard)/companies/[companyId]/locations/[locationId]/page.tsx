@@ -19,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getReviewSourceLogoSrc } from '@/lib/review-source-logos';
 import type { Location, ReviewSource, ReviewSourceType } from '@/types';
 
 // Source icons/colors - support both uppercase and lowercase
@@ -29,8 +30,8 @@ const sourceConfig = {
   FACEBOOK: { icon: 'f', color: 'text-blue-700', bgColor: 'bg-blue-100' },
   yelp: { icon: 'Y', color: 'text-red-600', bgColor: 'bg-red-100' },
   YELP: { icon: 'Y', color: 'text-red-600', bgColor: 'bg-red-100' },
-  tripadvisor: { icon: 'T', color: 'text-green-600', bgColor: 'bg-green-100' },
-  TRIPADVISOR: { icon: 'T', color: 'text-green-600', bgColor: 'bg-green-100' },
+  bbb: { icon: 'B', color: 'text-blue-800', bgColor: 'bg-blue-100' },
+  BBB: { icon: 'B', color: 'text-blue-800', bgColor: 'bg-blue-100' },
   clutch: { icon: 'C', color: 'text-orange-600', bgColor: 'bg-orange-100' },
   CLUTCH: { icon: 'C', color: 'text-orange-600', bgColor: 'bg-orange-100' },
   other: { icon: '★', color: 'text-gray-600', bgColor: 'bg-gray-100' },
@@ -325,17 +326,17 @@ function ReviewLinkCard({
     .slice(0, 2);
 
   return (
-    <Card className="p-6 mb-6 bg-gradient-to-r from-[#586c96] to-[#ee5f64] text-white overflow-hidden">
+    <Card className="p-6 mb-6 bg-linear-to-r from-[#586c96] to-[#ee5f64] text-white overflow-hidden">
       <div className="flex items-center gap-6">
         {/* Company Logo */}
         {companyLogo ? (
           <img 
             src={companyLogo} 
             alt={companyName} 
-            className="h-20 w-20 rounded-full object-cover flex-shrink-0 border-4 border-white/30 shadow-lg"
+            className="h-20 w-20 rounded-full object-cover shrink-0 border-4 border-white/30 shadow-lg"
           />
         ) : (
-          <div className="h-20 w-20 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 border-4 border-white/30 shadow-lg">
+          <div className="h-20 w-20 rounded-full bg-white/20 flex items-center justify-center shrink-0 border-4 border-white/30 shadow-lg">
             <span className="text-white text-2xl font-bold">{initials}</span>
           </div>
         )}
@@ -354,8 +355,9 @@ function ReviewLinkCard({
             </code>
             <button
               onClick={handleCopy}
+              aria-label={copied ? 'Copied' : 'Copy link'}
               className={cn(
-                "p-2 rounded-lg transition-all flex-shrink-0",
+                "p-2 rounded-lg transition-all shrink-0",
                 copied 
                   ? "bg-green-500/30 text-white" 
                   : "bg-white/20 text-white hover:bg-white/30"
@@ -368,7 +370,7 @@ function ReviewLinkCard({
               href={`/reviews/${companySlug}/${locationSlug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-all flex-shrink-0"
+              className="p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-all shrink-0"
               title="Open in new tab"
             >
               <ExternalLink className="h-4 w-4" />
@@ -395,18 +397,29 @@ function SourceCard({
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const config = getSourceConfig(source.type);
+  const logoSrc = getReviewSourceLogoSrc(source.type);
 
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className={cn(
-            'h-12 w-12 rounded-lg flex items-center justify-center text-xl font-bold',
-            config.bgColor,
-            config.color
-          )}>
-            {config.icon}
-          </div>
+          {logoSrc ? (
+            <div className={cn('h-12 w-12 rounded-lg flex items-center justify-center', config.bgColor)}>
+              <img
+                src={logoSrc}
+                alt={source.name}
+                className="h-7 w-7"
+              />
+            </div>
+          ) : (
+            <div className={cn(
+              'h-12 w-12 rounded-lg flex items-center justify-center text-xl font-bold',
+              config.bgColor,
+              config.color
+            )}>
+              {config.icon}
+            </div>
+          )}
           <div>
             <h3 className="font-medium text-gray-900">{source.name}</h3>
             <a 
@@ -425,6 +438,8 @@ function SourceCard({
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
+              aria-label="Open actions menu"
+              title="Open actions menu"
               className="p-1 rounded hover:bg-gray-100"
             >
               <MoreVertical className="h-5 w-5 text-gray-400" />
@@ -479,7 +494,7 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
     google: 'Google Business Profile',
     facebook: 'Facebook Page',
     yelp: 'Yelp',
-    tripadvisor: 'TripAdvisor',
+    bbb: 'Better Business Bureau',
     clutch: 'Clutch',
     other: 'Other',
   };
@@ -521,7 +536,7 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
         <option value="google">Google</option>
         <option value="facebook">Facebook</option>
         <option value="yelp">Yelp</option>
-        <option value="tripadvisor">TripAdvisor</option>
+        <option value="bbb">BBB</option>
         <option value="clutch">Clutch</option>
         <option value="other">Other</option>
       </Select>
@@ -545,9 +560,11 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
             type="button"
             onClick={() => setUseAutoUrl(!useAutoUrl)}
             className={cn(
-              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#ee5f64] focus:ring-offset-2",
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#ee5f64] focus:ring-offset-2",
               useAutoUrl ? "bg-[#ee5f64]" : "bg-gray-200"
             )}
+            aria-label={useAutoUrl ? 'Using Place ID' : 'Using manual URL'}
+            title={useAutoUrl ? 'Using Place ID' : 'Using manual URL'}
           >
             <span
               className={cn(
@@ -623,8 +640,8 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
         {formData.type === 'yelp' && (
           <p className="text-gray-700">Go to your Yelp business page → Copy the URL</p>
         )}
-        {formData.type === 'tripadvisor' && (
-          <p className="text-gray-700">Go to your TripAdvisor listing → Copy the URL</p>
+        {formData.type === 'bbb' && (
+          <p className="text-gray-700">Go to your BBB business profile → Copy the URL</p>
         )}
         {formData.type === 'clutch' && (
           <p className="text-gray-700">Go to your Clutch profile → Reviews → Copy the review link</p>
