@@ -14,7 +14,9 @@ import {
   MapPin,
   Star,
   MessageSquare,
-  Loader2
+  Loader2,
+  Copy,
+  Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Location, ReviewSource, ReviewSourceType } from '@/types';
@@ -45,6 +47,7 @@ interface LocationWithCompany extends Location {
   company?: {
     name: string;
     slug: string;
+    logo?: string | null;
   };
 }
 
@@ -182,41 +185,12 @@ export default function LocationSourcesPage({
       </div>
 
       {/* Review Link Card */}
-      <Card className="p-6 mb-6 bg-gradient-to-r from-[#586c96] to-[#ee5f64] text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-lg mb-1">Review Collection Link</h3>
-            <p className="text-white/80 text-sm mb-3">
-              Share this link with customers to collect reviews
-            </p>
-            <code className="bg-white/20 px-3 py-1.5 rounded text-sm">
-              {typeof window !== 'undefined' ? window.location.origin : ''}/reviews/{companySlug}/{location.slug}
-            </code>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              className="border-white/30 text-white hover:bg-white/10"
-              onClick={() => {
-                navigator.clipboard.writeText(
-                  `${typeof window !== 'undefined' ? window.location.origin : ''}/reviews/${companySlug}/${location.slug}`
-                );
-              }}
-            >
-              Copy Link
-            </Button>
-            <a
-              href={`/reviews/${companySlug}/${location.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </a>
-          </div>
-        </div>
-      </Card>
+      <ReviewLinkCard 
+        companyName={companyName}
+        companySlug={companySlug}
+        companyLogo={location.company?.logo}
+        locationSlug={location.slug}
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -311,6 +285,104 @@ export default function LocationSourcesPage({
     </div>
   );
 }
+
+// ============================================================================
+// Review Link Card Component
+// ============================================================================
+
+function ReviewLinkCard({ 
+  companyName,
+  companySlug,
+  companyLogo,
+  locationSlug
+}: { 
+  companyName: string;
+  companySlug: string;
+  companyLogo?: string | null;
+  locationSlug: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  
+  const reviewUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/reviews/${companySlug}/${locationSlug}`
+    : `/reviews/${companySlug}/${locationSlug}`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(reviewUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const initials = companyName
+    .split(' ')
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  return (
+    <Card className="p-6 mb-6 bg-gradient-to-r from-[#586c96] to-[#ee5f64] text-white overflow-hidden">
+      <div className="flex items-center gap-6">
+        {/* Company Logo */}
+        {companyLogo ? (
+          <img 
+            src={companyLogo} 
+            alt={companyName} 
+            className="h-20 w-20 rounded-full object-cover flex-shrink-0 border-4 border-white/30 shadow-lg"
+          />
+        ) : (
+          <div className="h-20 w-20 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 border-4 border-white/30 shadow-lg">
+            <span className="text-white text-2xl font-bold">{initials}</span>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-lg mb-1">Review Collection Link</h3>
+          <p className="text-white/80 text-sm mb-3">
+            Share this link with customers to collect reviews
+          </p>
+          
+          {/* URL with inline icons */}
+          <div className="flex items-center gap-2">
+            <code className="bg-white/20 px-3 py-1.5 rounded text-sm truncate">
+              {reviewUrl}
+            </code>
+            <button
+              onClick={handleCopy}
+              className={cn(
+                "p-2 rounded-lg transition-all flex-shrink-0",
+                copied 
+                  ? "bg-green-500/30 text-white" 
+                  : "bg-white/20 text-white hover:bg-white/30"
+              )}
+              title={copied ? "Copied!" : "Copy link"}
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </button>
+            <a
+              href={`/reviews/${companySlug}/${locationSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-all flex-shrink-0"
+              title="Open in new tab"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ============================================================================
+// Source Card Component
+// ============================================================================
 
 function SourceCard({ 
   source,
