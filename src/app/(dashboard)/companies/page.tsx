@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Card, Button, Input, Modal, ImageCropper } from '@/components/ui';
+import { Card, Button, Input, Modal, ImageCropper, EmailTemplatesModal } from '@/components/ui';
 import { 
   Building2, 
   MapPin, 
@@ -33,6 +33,7 @@ export default function CompaniesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [deletingCompany, setDeletingCompany] = useState<Company | null>(null);
+  const [emailTemplateCompany, setEmailTemplateCompany] = useState<Company | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
 
   const fetchCompanies = useCallback(async () => {
@@ -191,6 +192,7 @@ export default function CompaniesPage() {
               company={company}
               onEdit={() => setEditingCompany(company)}
               onDelete={() => setDeletingCompany(company)}
+              onEmail={() => setEmailTemplateCompany(company)}
             />
           ))}
         </div>
@@ -202,6 +204,7 @@ export default function CompaniesPage() {
           companies={filteredCompanies}
           onEdit={setEditingCompany}
           onDelete={setDeletingCompany}
+          onEmail={setEmailTemplateCompany}
         />
       )}
 
@@ -280,6 +283,19 @@ export default function CompaniesPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Email Templates Modal */}
+      {emailTemplateCompany && (
+        <EmailTemplatesModal
+          isOpen={!!emailTemplateCompany}
+          onClose={() => setEmailTemplateCompany(null)}
+          company={{
+            name: emailTemplateCompany.name,
+            slug: emailTemplateCompany.slug,
+            logo: emailTemplateCompany.logo,
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -292,9 +308,10 @@ interface CompanyCardProps {
   company: Company;
   onEdit: () => void;
   onDelete: () => void;
+  onEmail: () => void;
 }
 
-function CompanyCard({ company, onEdit, onDelete }: CompanyCardProps) {
+function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
   const [copied, setCopied] = useState(false);
   
   const locationCount = company._count?.locations ?? company.locationCount ?? 0;
@@ -396,7 +413,7 @@ function CompanyCard({ company, onEdit, onDelete }: CompanyCardProps) {
         <ActionButton 
           icon={Mail} 
           label="Email" 
-          onClick={() => {/* TODO: Email marketing template */}}
+          onClick={onEmail}
         />
         <Link href={`/companies/${company.id}/locations`} className="contents">
           <ActionButton 
@@ -452,9 +469,10 @@ interface CompanyTableProps {
   companies: Company[];
   onEdit: (company: Company) => void;
   onDelete: (company: Company) => void;
+  onEmail: (company: Company) => void;
 }
 
-function CompanyTable({ companies, onEdit, onDelete }: CompanyTableProps) {
+function CompanyTable({ companies, onEdit, onDelete, onEmail }: CompanyTableProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopyUrl = async (company: Company) => {
@@ -566,6 +584,7 @@ function CompanyTable({ companies, onEdit, onDelete }: CompanyTableProps) {
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
+                        onClick={() => onEmail(company)}
                         className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                         title="Email Marketing"
                       >

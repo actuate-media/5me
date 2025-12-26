@@ -22,3 +22,5 @@ export { Badge } from './Badge';
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './Table';
 
 export { ImageCropper } from './ImageCropper';
+
+export { EmailTemplatesModal } from './EmailTemplatesModal';
