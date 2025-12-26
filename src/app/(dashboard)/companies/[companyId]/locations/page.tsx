@@ -273,19 +273,19 @@ function LocationCard({
   return (
     <Card className="p-0 overflow-hidden hover:shadow-lg hover:border-indigo-300 transition-all duration-200 group">
       {/* Main Content */}
-      <div className="p-4">
+      <div className="p-5">
         {/* Header: Avatar + Name */}
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-lg font-bold">{initials}</span>
+        <div className="flex items-center gap-4 mb-4">
+          <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <span className="text-white text-2xl font-bold">{initials}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-900 truncate text-base" title={location.name}>
+            <h3 className="font-bold text-gray-900 truncate text-lg leading-tight" title={location.name}>
               {location.name}
             </h3>
             {location.city && (
-              <p className="text-xs text-gray-500 flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
+              <p className="text-sm text-gray-500 flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
                 {location.city}{location.state ? `, ${location.state}` : ''}
               </p>
             )}
@@ -293,7 +293,7 @@ function LocationCard({
         </div>
 
         {/* URL Row */}
-        <div className="flex items-center gap-2 mb-3 bg-gray-50 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 mb-4 bg-gray-50 rounded-lg px-3 py-2.5">
           <Globe className="h-4 w-4 text-gray-400 flex-shrink-0" />
           <span className="text-sm text-gray-600 truncate flex-1 font-mono">
             /{companySlug}/{location.slug}
@@ -320,17 +320,17 @@ function LocationCard({
         </div>
 
         {/* Stats Row */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           <div className="flex items-center gap-1.5">
             <Globe className="h-4 w-4 text-indigo-500" />
-            <span className="text-sm font-medium text-gray-700">{sourceCount}</span>
+            <span className="text-sm font-semibold text-gray-700">{sourceCount}</span>
             <span className="text-sm text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
           </div>
         </div>
       </div>
 
       {/* Actions Bar */}
-      <div className="border-t border-gray-100 bg-gray-50/80 px-2 py-2 flex items-center justify-around">
+      <div className="border-t border-gray-100 bg-gray-50/80 px-4 py-2.5 flex items-center justify-center gap-1">
         <button
           onClick={onEdit}
           className="p-2.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200"
