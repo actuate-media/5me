@@ -387,11 +387,21 @@ interface SourceFormProps {
 }
 
 function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
+  // Check if existing source URL is a Google Place ID URL
+  const isGooglePlaceIdUrl = source?.url?.includes('search.google.com/local/writereview?placeid=');
+  const extractedPlaceId = isGooglePlaceIdUrl 
+    ? source?.url?.split('placeid=')[1]?.split('&')[0] || ''
+    : '';
+
   const [formData, setFormData] = useState({
     type: source?.type || 'google' as ReviewSourceType,
     name: source?.name || '',
     url: source?.url || '',
   });
+  
+  // For Google: toggle between Place ID mode (auto) and manual URL mode
+  const [useAutoUrl, setUseAutoUrl] = useState(source ? isGooglePlaceIdUrl : true);
+  const [placeId, setPlaceId] = useState(extractedPlaceId);
 
   const sourceNames: Record<ReviewSourceType, string> = {
     google: 'Google Business Profile',
@@ -407,17 +417,30 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
       ...formData,
       type,
       name: source ? formData.name : sourceNames[type],
+      url: '', // Reset URL when type changes
+    });
+    setPlaceId('');
+    setUseAutoUrl(true);
+  };
+
+  // Build the final URL for Google when using auto mode
+  const getFinalUrl = () => {
+    if (formData.type === 'google' && useAutoUrl && placeId) {
+      return `https://search.google.com/local/writereview?placeid=${placeId}`;
+    }
+    return formData.url;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      ...formData,
+      url: getFinalUrl(),
     });
   };
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit(formData);
-      }}
-      className="space-y-4"
-    >
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Select
         label="Source Type"
         value={formData.type}
@@ -439,36 +462,87 @@ function SourceForm({ source, onSubmit, onCancel }: SourceFormProps) {
         required
       />
 
-      <Input
-        label="Review URL"
-        value={formData.url}
-        onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-        placeholder={formData.type === 'google' 
-          ? 'https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID' 
-          : 'https://example.com/your-business/review'}
-        required
-      />
+      {/* Google: Toggle between Place ID and Manual URL */}
+      {formData.type === 'google' && (
+        <div className="flex items-center justify-between py-2">
+          <div>
+            <span className="text-sm font-medium text-gray-700">Use Place ID</span>
+            <p className="text-xs text-gray-500">Auto-generate URL from Place ID</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setUseAutoUrl(!useAutoUrl)}
+            className={cn(
+              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+              useAutoUrl ? "bg-indigo-600" : "bg-gray-200"
+            )}
+          >
+            <span
+              className={cn(
+                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                useAutoUrl ? "translate-x-5" : "translate-x-0"
+              )}
+            />
+          </button>
+        </div>
+      )}
 
+      {/* Google with Auto URL: Place ID Input */}
+      {formData.type === 'google' && useAutoUrl ? (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Google Place ID <span className="text-red-500">*</span>
+          </label>
+          <Input
+            value={placeId}
+            onChange={(e) => setPlaceId(e.target.value.trim())}
+            placeholder="ChIJA1z8o5hCkFQRS-wiGKp5U3Q"
+            required
+          />
+          {placeId && (
+            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-xs text-gray-500 mb-1">Generated URL:</p>
+              <code className="text-xs text-green-700 font-mono break-all">
+                https://search.google.com/local/writereview?placeid={placeId}
+              </code>
+            </div>
+          )}
+        </div>
+      ) : (
+        <Input
+          label="Review URL"
+          value={formData.url}
+          onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+          placeholder={formData.type === 'google' 
+            ? 'https://search.google.com/local/writereview?placeid=...' 
+            : 'https://example.com/your-business/review'}
+          required
+        />
+      )}
+
+      {/* Help Section */}
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm">
         <p className="font-semibold text-gray-900 mb-2">How to get your review link:</p>
         {formData.type === 'google' && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <p className="text-gray-700">
-              Google review links use a <strong>Place ID</strong> — a unique identifier for your business location. 
-              The URL format is:
+              Find your <strong>Place ID</strong> using Google's tool:
             </p>
-            <code className="block bg-white px-3 py-2 rounded border border-blue-200 text-xs text-gray-800 font-mono">
-              https://search.google.com/local/writereview?placeid=<span className="text-indigo-600">YOUR_PLACE_ID</span>
-            </code>
-            <div className="pt-2 border-t border-blue-200">
-              <p className="font-medium text-gray-800 mb-1">To find your Place ID:</p>
-              <ol className="list-decimal list-inside space-y-1 text-gray-600">
-                <li>Go to <a href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline font-medium">Google Place ID Finder ↗</a></li>
-                <li>Search for your business name and address</li>
-                <li>Copy the Place ID (starts with "ChIJ...")</li>
-                <li>Paste it into the URL above</li>
-              </ol>
-            </div>
+            <a 
+              href="https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-blue-200 rounded-lg text-indigo-600 hover:bg-blue-50 font-medium transition-colors"
+            >
+              <Globe className="h-4 w-4" />
+              Open Google Place ID Finder
+              <ExternalLink className="h-3 w-3" />
+            </a>
+            <ol className="list-decimal list-inside space-y-1 text-gray-600 mt-3">
+              <li>Search for your business name and address</li>
+              <li>Copy the Place ID (starts with "ChIJ...")</li>
+              <li>Paste it above</li>
+            </ol>
           </div>
         )}
         {formData.type === 'facebook' && (
