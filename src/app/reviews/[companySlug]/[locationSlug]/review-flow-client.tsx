@@ -96,13 +96,13 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
         href="https://5me.io"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="5me.io"
-        className="fixed top-6 left-6 z-20"
+        aria-label="5me.io - Review Generation Tools"
+        className="fixed top-4 left-4 sm:top-6 sm:left-6 z-20"
       >
         <img
           src="/assets/logos/5me-logo.png"
           alt="5me.io"
-          className="h-14 w-auto"
+          className="h-10 sm:h-14 w-auto"
         />
       </a>
 
@@ -110,9 +110,9 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
       {location.companyLocationsCount > 1 && (
         <Link
           href={`/reviews/${location.companySlug}`}
-          className="fixed top-6 right-6 z-20 inline-flex items-center gap-2 text-gray-200 hover:text-white transition-colors text-sm"
+          className="fixed top-4 right-4 sm:top-6 sm:right-6 z-20 inline-flex items-center gap-2 text-gray-200 hover:text-white transition-colors text-xs sm:text-sm"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           Back to locations
         </Link>
       )}
@@ -121,25 +121,25 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
         <div className="w-full max-w-xl">
 
           {step === 'rating' && (
-            <Card className="px-12 py-14 bg-white border border-gray-200 shadow-lg rounded-2xl">
-              <div className="flex flex-col items-center text-center mb-10">
+            <Card className="px-6 py-8 sm:px-12 sm:py-14 bg-white border border-gray-200 shadow-lg rounded-2xl">
+              <div className="flex flex-col items-center text-center mb-6 sm:mb-10">
                 {location.companyLogo ? (
                   <img
                     src={location.companyLogo}
                     alt={location.companyName}
-                    className="h-48 w-auto mb-2"
+                    className="h-24 sm:h-48 w-auto mb-2"
                   />
                 ) : (
-                  <div className="text-2xl font-bold text-gray-800 mb-2">{location.companyName}</div>
+                  <div className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{location.companyName}</div>
                 )}
 
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                   How was your experience?
                 </h2>
-                <p className="text-base text-gray-500 mt-1">Please rate your experience</p>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Please rate your experience</p>
               </div>
 
-              <div className="flex justify-center gap-3">
+              <div className="flex justify-center gap-1 sm:gap-3" role="group" aria-label="Rating">
                 {[1, 2, 3, 4, 5].map((value) => (
                   <button
                     key={value}
@@ -148,13 +148,13 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                     onMouseLeave={() => setHoveredRating(0)}
                     aria-label={`Rate ${value} star${value === 1 ? '' : 's'}`}
                     className={cn(
-                      'p-2 transition-transform hover:scale-110 rounded-lg',
+                      'p-1 sm:p-2 transition-transform hover:scale-110 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:ring-offset-2',
                       rating === value && 'ring-2 ring-[#586c96] ring-offset-2'
                     )}
                   >
                     <Star
                       className={cn(
-                        'h-16 w-16 transition-colors',
+                        'h-12 w-12 sm:h-16 sm:w-16 transition-colors',
                         (hoveredRating || rating) >= value
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-300'
@@ -166,16 +166,16 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
 
               {/* Emoji feedback section */}
               {rating > 0 && (
-                <div className="mt-8 pt-6 border-t border-gray-100">
+                <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-100" aria-live="polite">
                   <div className="flex flex-col items-center text-center">
-                    <span className="text-5xl mb-3">
+                    <span className="text-4xl sm:text-5xl mb-3" role="img" aria-label={rating >= 4 ? 'Happy face' : rating === 3 ? 'Neutral face' : 'Sad face'}>
                       {rating === 5 && '😃'}
                       {rating === 4 && '😊'}
                       {rating === 3 && '😐'}
                       {rating === 2 && '😕'}
                       {rating === 1 && '😞'}
                     </span>
-                    <p className="text-gray-600">
+                    <p className="text-sm sm:text-base text-gray-600">
                       {rating >= 4 && 'Excellent! Thank you for your feedback!'}
                       {rating === 3 && "Thank you for your feedback. We're always looking to improve."}
                       {rating <= 2 && "We're sorry to hear that. Please let us know how we can improve."}
@@ -187,8 +187,8 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
           )}
 
           {step === 'feedback' && (
-            <Card className="p-8 bg-white/10 backdrop-blur-sm border border-white/20">
-              <h2 className="text-xl font-semibold text-white text-center mb-2">
+            <Card className="p-6 sm:p-8 bg-white/10 backdrop-blur-sm border border-white/20">
+              <h2 className="text-lg sm:text-xl font-semibold text-white text-center mb-2">
                 We&apos;re sorry to hear that
               </h2>
               <p className="text-gray-300 text-center mb-6">
@@ -211,10 +211,11 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                   className="bg-white/10 border-white/20 text-white placeholder-gray-400"
                 />
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label htmlFor="feedback-message" className="block text-sm font-medium text-gray-300 mb-1">
                     Message
                   </label>
                   <textarea
+                    id="feedback-message"
                     value={feedbackForm.message}
                     onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
                     rows={4}
@@ -229,7 +230,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
               </form>
               <button
                 onClick={() => setStep('rating')}
-                className="w-full mt-4 text-sm text-gray-400 hover:text-white transition-colors"
+                className="w-full mt-4 text-sm text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 rounded py-1"
               >
                 ← Change rating
               </button>
@@ -240,8 +241,13 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
 
       {/* Source Selection Modal */}
       {showSourceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <Card className="w-full max-w-md p-6 bg-white relative">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <Card className="w-full max-w-md p-4 sm:p-6 bg-white relative">
             <button
               onClick={() => setShowSourceModal(false)}
               aria-label="Close"
@@ -251,7 +257,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
               <X className="h-5 w-5 text-gray-400" />
             </button>
 
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 id="modal-title" className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
               Thank you! 🎉
             </h2>
             <p className="text-gray-600 mb-6">

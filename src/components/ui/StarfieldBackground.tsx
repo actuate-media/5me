@@ -167,6 +167,7 @@ export function StarfieldBackground() {
       ref={canvasRef}
       className="absolute inset-0"
       style={{ zIndex: 0 }}
+      aria-hidden="true"
     />
   );
 }
