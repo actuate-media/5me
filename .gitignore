@@ -29,3 +29,8 @@ dist-ssr
 
 # Next.js build output
 .next
+
+.vercel
+.env*.local
+
+/src/generated/prisma

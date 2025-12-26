@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getAllWidgets, createWidget, getWidgetsByCompany } from '@/services/widget.service';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/widgets - Get all widgets
 export async function GET(request: NextRequest) {
   try {

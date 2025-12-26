@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { getUserByEmail, updateUserRole, toggleUserActive } from '@/services/user.service';
 import type { UserRole } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 interface RouteParams {
   params: Promise<{ email: string }>;
 }

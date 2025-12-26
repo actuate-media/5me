@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { getAllUsers, createUser } from '@/services/user.service';
 import type { UserRole } from '@/types';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/users - Get all users
 export async function GET() {
   try {

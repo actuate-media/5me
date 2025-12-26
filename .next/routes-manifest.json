@@ -28,6 +28,74 @@
       "namedRegex": "^/api/auth/(?<nxtPnextauth>.+?)(?:/)?$"
     },
     {
+      "page": "/api/companies/[id]",
+      "regex": "^/api/companies/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/companies/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/companies/[id]/locations",
+      "regex": "^/api/companies/([^/]+?)/locations(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/companies/(?<nxtPid>[^/]+?)/locations(?:/)?$"
+    },
+    {
+      "page": "/api/companies/[id]/locations/[locationId]",
+      "regex": "^/api/companies/([^/]+?)/locations/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid",
+        "nxtPlocationId": "nxtPlocationId"
+      },
+      "namedRegex": "^/api/companies/(?<nxtPid>[^/]+?)/locations/(?<nxtPlocationId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/companies/[id]/locations/[locationId]/sources",
+      "regex": "^/api/companies/([^/]+?)/locations/([^/]+?)/sources(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid",
+        "nxtPlocationId": "nxtPlocationId"
+      },
+      "namedRegex": "^/api/companies/(?<nxtPid>[^/]+?)/locations/(?<nxtPlocationId>[^/]+?)/sources(?:/)?$"
+    },
+    {
+      "page": "/api/companies/[id]/locations/[locationId]/sources/[sourceId]",
+      "regex": "^/api/companies/([^/]+?)/locations/([^/]+?)/sources/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid",
+        "nxtPlocationId": "nxtPlocationId",
+        "nxtPsourceId": "nxtPsourceId"
+      },
+      "namedRegex": "^/api/companies/(?<nxtPid>[^/]+?)/locations/(?<nxtPlocationId>[^/]+?)/sources/(?<nxtPsourceId>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/feedback/[id]",
+      "regex": "^/api/feedback/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/feedback/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/users/[email]",
+      "regex": "^/api/users/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPemail": "nxtPemail"
+      },
+      "namedRegex": "^/api/users/(?<nxtPemail>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/widgets/[id]",
+      "regex": "^/api/widgets/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/widgets/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/companies/[companyId]/locations",
       "regex": "^/companies/([^/]+?)/locations(?:/)?$",
       "routeKeys": {
@@ -104,6 +172,12 @@
       "regex": "^/settings(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/settings(?:/)?$"
+    },
+    {
+      "page": "/users",
+      "regex": "^/users(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/users(?:/)?$"
     },
     {
       "page": "/widgets",

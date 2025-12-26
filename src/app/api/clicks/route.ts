@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { recordClick } from '@/services/source.service';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/clicks - Record a review click (public endpoint)
 export async function POST(request: NextRequest) {
   try {

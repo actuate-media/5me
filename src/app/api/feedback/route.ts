@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 import { getAllFeedback, createFeedback, getFeedbackStats } from '@/services/feedbacks';
 import type { FeedbackStatus } from '@prisma/client';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/feedback - Get all feedback
 export async function GET(request: NextRequest) {
   try {
