@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Card, Button, Input, Modal } from '@/components/ui';
+import { Card, Button, Input, Modal, ImageCropper } from '@/components/ui';
 import { 
   Building2, 
   MapPin, 
@@ -13,7 +13,6 @@ import {
   Trash2,
   MessageSquare,
   Settings,
-  Upload,
   Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -313,27 +312,13 @@ function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
       />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-          {formData.logo ? (
-            <div className="flex items-center justify-center gap-4">
-              <img src={formData.logo} alt="Logo" className="h-16 w-16 rounded-lg object-cover" />
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, logo: '' })}
-                className="text-sm text-red-600 hover:underline"
-              >
-                Remove
-              </button>
-            </div>
-          ) : (
-            <div>
-              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-              <p className="text-xs text-gray-400">PNG, JPG up to 2MB</p>
-            </div>
-          )}
-        </div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+        <ImageCropper
+          value={formData.logo}
+          onChange={(url) => setFormData({ ...formData, logo: url })}
+          onRemove={() => setFormData({ ...formData, logo: '' })}
+          aspectRatio={1}
+        />
       </div>
 
       <div className="flex justify-end gap-3 pt-4">

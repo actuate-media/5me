@@ -20,3 +20,5 @@ export { Modal } from './Modal';
 export { Badge } from './Badge';
 
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './Table';
+
+export { ImageCropper } from './ImageCropper';
