@@ -36,12 +36,13 @@ export function EmailTemplatesModal({ isOpen, onClose, company, location }: Emai
     : `https://5me.io/reviews/${company.slug}`;
 
   const logoUrl = company.logo || 'https://5me.io/wp-content/uploads/2025/10/placeholder-logo.png';
+  const locationName = location?.name;
 
   const getTemplate = (type: TabType): string => {
     const templates = {
-      initial: generateInitialEmail(company.name, logoUrl, reviewUrl),
-      followup: generateFollowupEmail(company.name, logoUrl, reviewUrl),
-      final: generateFinalEmail(company.name, logoUrl, reviewUrl),
+      initial: generateInitialEmail(company.name, logoUrl, reviewUrl, locationName),
+      followup: generateFollowupEmail(company.name, logoUrl, reviewUrl, locationName),
+      final: generateFinalEmail(company.name, logoUrl, reviewUrl, locationName),
     };
     return templates[type];
   };
@@ -155,7 +156,11 @@ function syntaxHighlight(html: string): string {
 // Email Template Generators
 // ============================================================================
 
-function generateInitialEmail(companyName: string, logoUrl: string, reviewUrl: string): string {
+function generateInitialEmail(companyName: string, logoUrl: string, reviewUrl: string, locationName?: string): string {
+  const experienceText = locationName 
+    ? `your recent experience with us at our ${locationName} location`
+    : 'your recent experience with us';
+  
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -262,7 +267,7 @@ function generateInitialEmail(companyName: string, logoUrl: string, reviewUrl: s
                                     Hi {{contact.name}},
                                 </p>
                                 <p style="margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; line-height:24px; color:#666666;" class="dark-mode-subtext">
-                                    Thank you for choosing us! Your experience matters to us, and we'd appreciate it if you could take a moment to share your thoughts. Your feedback helps us improve and serve you better.
+                                    Thank you for choosing us! Your experience matters to us, and we'd appreciate it if you could take a moment to share your thoughts about ${experienceText}. Your feedback helps us improve and serve you better.
                                 </p>
                             </td>
                         </tr>
@@ -320,7 +325,11 @@ function generateInitialEmail(companyName: string, logoUrl: string, reviewUrl: s
 </html>`;
 }
 
-function generateFollowupEmail(companyName: string, logoUrl: string, reviewUrl: string): string {
+function generateFollowupEmail(companyName: string, logoUrl: string, reviewUrl: string, locationName?: string): string {
+  const experienceText = locationName 
+    ? `your recent experience with us at our ${locationName} location`
+    : 'your recent experience with us';
+  
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -427,7 +436,7 @@ function generateFollowupEmail(companyName: string, logoUrl: string, reviewUrl: 
                                     Hi {{contact.name}},
                                 </p>
                                 <p style="margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; line-height:24px; color:#666666;" class="dark-mode-subtext">
-                                    We sent you a message a few days ago asking about your recent experience with us. We understand life gets busy, but we'd still love to hear your thoughts!
+                                    We sent you a message a few days ago asking about ${experienceText}. We understand life gets busy, but we'd still love to hear your thoughts!
                                 </p>
                                 <p style="margin:20px 0 0 0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; line-height:24px; color:#666666;" class="dark-mode-subtext">
                                     Your feedback is incredibly valuable and helps us continue to improve. It only takes 2 minutes to complete.
@@ -488,7 +497,11 @@ function generateFollowupEmail(companyName: string, logoUrl: string, reviewUrl: 
 </html>`;
 }
 
-function generateFinalEmail(companyName: string, logoUrl: string, reviewUrl: string): string {
+function generateFinalEmail(companyName: string, logoUrl: string, reviewUrl: string, locationName?: string): string {
+  const experienceText = locationName 
+    ? `your recent experience with us at our ${locationName} location`
+    : 'your recent experience with us';
+  
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -595,7 +608,7 @@ function generateFinalEmail(companyName: string, logoUrl: string, reviewUrl: str
                                     Hi {{contact.name}},
                                 </p>
                                 <p style="margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; line-height:24px; color:#666666;" class="dark-mode-subtext">
-                                    This is our final request for your feedback about your recent experience with us. We truly value your opinion and would love to know how we did.
+                                    This is our final request for your feedback about ${experienceText}. We truly value your opinion and would love to know how we did.
                                 </p>
                                 <p style="margin:20px 0 0 0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:16px; line-height:24px; color:#666666;" class="dark-mode-subtext">
                                     Whether your experience was great or there's room for improvement, your honest feedback helps us serve you and all our customers better. This is your last opportunity to make your voice heard!
