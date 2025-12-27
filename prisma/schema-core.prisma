@@ -1,13 +1,16 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Core Database Schema - 5me Platform
+// Contains: User, Company, Location, ReviewSource, Feedback, ReviewClick
+// Connection: CORE_DATABASE_URL (Accelerate) + CORE_DATABASE_URL_DIRECT (migrations)
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client-core"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("PRISMA_CORE")
+  provider  = "postgresql"
+  url       = env("CORE_DATABASE_URL")
+  directUrl = env("CORE_DATABASE_URL_DIRECT")
 }
 
 // User roles enum
@@ -49,7 +52,6 @@ model Company {
   // Relations
   users        CompanyUser[]
   locations    Location[]
-  widgets      Widget[]
 
   @@map("companies")
 }
@@ -168,120 +170,4 @@ model Feedback {
   assignedUser User?    @relation(fields: [assignedTo], references: [id])
 
   @@map("feedback")
-}
-
-// Widget types
-enum WidgetType {
-  CAROUSEL
-  GRID
-  LIST
-  BADGE
-  SLIDER
-}
-
-// Widget status
-enum WidgetStatus {
-  DRAFT
-  PUBLISHED
-}
-
-// Widget model - Reviews slider/display widget
-model Widget {
-  id          String       @id @default(cuid())
-  companyId   String
-  name        String
-  type        WidgetType   @default(CAROUSEL)
-  status      WidgetStatus @default(DRAFT)
-  configJson  Json         // Versioned WidgetConfig - source, layout, header, reviews, style, settings
-  embedCode   String?
-  publishedAt DateTime?
-  isActive    Boolean      @default(true)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  // Relations
-  company   Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  locations WidgetLocation[]
-  summary   WidgetSummary?
-
-  @@map("widgets")
-}
-
-// Widget location - Links widget to Google Places (or other providers)
-model WidgetLocation {
-  id        String   @id @default(cuid())
-  widgetId  String
-  provider  String   @default("google") // google, facebook, yelp, etc.
-  placeId   String   // Google Place ID or equivalent
-  label     String?  // Human-readable location name
-  weight    Int      @default(1) // For prioritizing locations
-  enabled   Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  widget  Widget   @relation(fields: [widgetId], references: [id], onDelete: Cascade)
-  reviews Review[]
-
-  @@unique([widgetId, placeId])
-  @@map("widget_locations")
-}
-
-// Ingested review from external provider
-model Review {
-  id               String   @id @default(cuid())
-  widgetLocationId String
-  provider         String   @default("google")
-  providerReviewId String   // Unique ID from the provider
-  authorName       String
-  authorAvatarUrl  String?
-  rating           Int      // 1-5
-  text             String?  // Review text (may be null)
-  language         String?
-  reviewUrl        String?
-  reviewCreatedAt  DateTime
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  // Relations
-  widgetLocation WidgetLocation  @relation(fields: [widgetLocationId], references: [id], onDelete: Cascade)
-  override       ReviewOverride?
-
-  @@unique([provider, providerReviewId])
-  @@index([widgetLocationId])
-  @@map("reviews")
-}
-
-// Review moderation overrides
-model ReviewOverride {
-  id            String   @id @default(cuid())
-  reviewId      String   @unique
-  hidden        Boolean  @default(false)
-  pinned        Boolean  @default(false)
-  customExcerpt String?
-  tags          Json?    // JSON array of tags
-  notes         String?  // Internal notes
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-
-  @@map("review_overrides")
-}
-
-// Cached widget summary for fast payload delivery
-model WidgetSummary {
-  id           String   @id @default(cuid())
-  widgetId     String   @unique
-  avgRating    Float
-  totalReviews Int
-  lastSyncedAt DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  widget Widget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
-
-  @@map("widget_summaries")
 }

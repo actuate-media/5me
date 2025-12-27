@@ -18,7 +18,9 @@ import {
   Check,
   LayoutGrid,
   List,
-  Globe
+  Globe,
+  BarChart3,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Company } from '@/types';
@@ -185,7 +187,7 @@ export default function CompaniesPage() {
 
       {/* Cards View */}
       {!isLoading && !error && viewMode === 'cards' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filteredCompanies.map((company) => (
             <CompanyCard 
               key={company.id} 
@@ -345,8 +347,8 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
       variant="bordered" 
       className="p-0 overflow-hidden hover:shadow-lg hover:border-[#586c96]/40 transition-all duration-200 group"
     >
-      {/* Main Content */}
-      <div className="p-5">
+      {/* Main Content - Clickable to Locations */}
+      <Link href={`/companies/${company.id}/locations`} className="block p-5 cursor-pointer">
         {/* Header: Logo + Name */}
         <div className="flex items-center gap-4 mb-4">
           {company.logo ? (
@@ -407,8 +409,17 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
             <span className="text-sm font-semibold text-gray-700">{sourceCount}</span>
             <span className="text-sm text-gray-400">{sourceCount === 1 ? 'Source' : 'Sources'}</span>
           </div>
+          <Link 
+            href={`/companies/${company.id}/feedback`} 
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 hover:text-[#586c96] transition-colors"
+          >
+            <MessageSquare className="h-4 w-4 text-[#ee5f64]" />
+            <span className="text-sm font-semibold text-gray-700">{company.feedbackCount ?? 0}</span>
+            <span className="text-sm text-gray-400">Feedback</span>
+          </Link>
         </div>
-      </div>
+      </Link>
 
       {/* Actions Bar */}
       <div className="border-t border-gray-100 bg-gray-50/80 px-4 py-2.5 flex items-center justify-center gap-1">
@@ -426,6 +437,18 @@ function CompanyCard({ company, onEdit, onDelete, onEmail }: CompanyCardProps) {
           <ActionButton 
             icon={Settings} 
             label="Manage Locations"
+          />
+        </Link>
+        <Link href={`/companies/${company.id}/analytics`} className="contents">
+          <ActionButton 
+            icon={BarChart3} 
+            label="Analytics"
+          />
+        </Link>
+        <Link href={`/companies/${company.id}/feedback`} className="contents">
+          <ActionButton 
+            icon={MessageSquare} 
+            label="Feedback"
           />
         </Link>
         <ActionButton 
@@ -511,6 +534,9 @@ function CompanyTable({ companies, onEdit, onDelete, onEmail }: CompanyTableProp
               <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
                 Sources
               </th>
+              <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
+                Feedback
+              </th>
               <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
                 Actions
               </th>
@@ -570,16 +596,28 @@ function CompanyTable({ companies, onEdit, onDelete, onEmail }: CompanyTableProp
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className="inline-flex items-center gap-1 text-sm text-gray-600">
-                      <MapPin className="h-4 w-4 text-gray-400" />
+                    <Link 
+                      href={`/companies/${company.id}/locations`}
+                      className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-[#ee5f64] hover:bg-[#fef2f2] rounded-md px-2 py-1 -mx-2 transition-colors"
+                    >
+                      <MapPin className="h-4 w-4" />
                       {locationCount}
-                    </span>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span className="inline-flex items-center gap-1 text-sm text-gray-600">
                       <Globe className="h-4 w-4 text-gray-400" />
                       {sourceCount}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <Link 
+                      href={`/companies/${company.id}/feedback`}
+                      className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-[#586c96] hover:bg-[#f0f3f8] rounded-md px-2 py-1 -mx-2 transition-colors"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {company.feedbackCount ?? 0}
+                    </Link>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-1">
@@ -603,6 +641,20 @@ function CompanyTable({ companies, onEdit, onDelete, onEmail }: CompanyTableProp
                         title="Manage Locations"
                       >
                         <Settings className="h-4 w-4" />
+                      </Link>
+                      <Link
+                        href={`/companies/${company.id}/analytics`}
+                        className="p-2 text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8] rounded-lg transition-colors"
+                        title="Analytics"
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                      </Link>
+                      <Link
+                        href={`/companies/${company.id}/feedback`}
+                        className="p-2 text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8] rounded-lg transition-colors"
+                        title="Feedback"
+                      >
+                        <MessageSquare className="h-4 w-4" />
                       </Link>
                       <button
                         onClick={() => onDelete(company)}

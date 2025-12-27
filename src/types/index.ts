@@ -26,6 +26,8 @@ export interface Company {
   logo?: string;
   locationCount?: number;
   sourceCount?: number;
+  feedbackCount?: number;
+  locations?: Location[];
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -165,3 +167,7 @@ export interface PaginatedResponse<T> {
   limit: number;
   totalPages: number;
 }
+
+// Re-export widget config types
+export * from './widget-config';
+

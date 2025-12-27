@@ -2,7 +2,7 @@
 
 import { useState, use, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Card, Button, Input, Modal } from '@/components/ui';
+import { Card, Button, Input, Modal, EmailTemplatesModal, Select } from '@/components/ui';
 import { 
   ArrowLeft,
   MapPin, 
@@ -32,6 +32,7 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
   const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [emailTemplateLocation, setEmailTemplateLocation] = useState<Location | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -177,7 +178,7 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {filteredLocations.map((location) => (
           <LocationCard 
             key={location.id} 
@@ -186,6 +187,7 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
             companyId={companyId}
             onEdit={() => setEditingLocation(location)}
             onDelete={() => handleDeleteLocation(location.id)}
+            onEmail={() => setEmailTemplateLocation(location)}
           />
         ))}
       </div>
@@ -226,6 +228,23 @@ export default function CompanyLocationsPage({ params }: { params: Promise<{ com
           />
         )}
       </Modal>
+
+      {/* Email Templates Modal */}
+      {emailTemplateLocation && company && (
+        <EmailTemplatesModal
+          isOpen={!!emailTemplateLocation}
+          onClose={() => setEmailTemplateLocation(null)}
+          company={{
+            name: company.name,
+            slug: company.slug,
+            logo: company.logo,
+          }}
+          location={{
+            name: emailTemplateLocation.name,
+            slug: emailTemplateLocation.slug,
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -235,13 +254,15 @@ function LocationCard({
   companySlug,
   companyId,
   onEdit,
-  onDelete
+  onDelete,
+  onEmail
 }: { 
   location: Location; 
   companySlug: string;
   companyId: string;
   onEdit: () => void;
   onDelete: () => void;
+  onEmail: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -339,7 +360,7 @@ function LocationCard({
           <Edit className="h-5 w-5" />
         </button>
         <button
-          onClick={() => {/* TODO: Email templates for location */}}
+          onClick={onEmail}
           className="p-2.5 rounded-lg text-gray-400 hover:text-[#586c96] hover:bg-[#f0f3f8] transition-all duration-200"
           title="Email Templates"
         >
@@ -492,15 +513,14 @@ function LocationForm({ location, onSubmit, onCancel }: LocationFormProps) {
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Rating Threshold <span className="text-red-500">*</span>
         </label>
-        <select
-          value={formData.ratingThreshold}
+        <Select
+          value={formData.ratingThreshold.toString()}
           onChange={(e) => setFormData({ ...formData, ratingThreshold: parseInt(e.target.value, 10) })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent"
         >
-          <option value={3}>3 Stars</option>
-          <option value={4}>4 Stars</option>
-          <option value={5}>5 Stars</option>
-        </select>
+          <option value="3">3 Stars</option>
+          <option value="4">4 Stars</option>
+          <option value="5">5 Stars</option>
+        </Select>
         <p className="text-sm text-gray-500 mt-1">
           Ratings at or above this threshold will show review platforms
         </p>

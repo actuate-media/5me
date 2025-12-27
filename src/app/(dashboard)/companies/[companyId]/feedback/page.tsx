@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, use, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { Card, Button, Badge, Select, Modal, Textarea } from '@/components/ui';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui';
 import { 
   MessageSquare, 
   Search, 
-  Filter,
   Eye,
   Check,
   Star,
@@ -17,9 +17,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  ArrowLeft,
   Trash2
 } from 'lucide-react';
 import { cn, formatRelativeTime } from '@/lib/utils';
+import type { Company } from '@/types';
 
 interface FeedbackItem {
   id: string;
@@ -47,7 +49,9 @@ const statusConfig = {
   RESOLVED: { label: 'Resolved', variant: 'success' as const },
 };
 
-export default function FeedbackPage() {
+export default function CompanyFeedbackPage({ params }: { params: Promise<{ companyId: string }> }) {
+  const { companyId } = use(params);
+  const [company, setCompany] = useState<Company | null>(null);
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,28 +61,38 @@ export default function FeedbackPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const fetchFeedback = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
+      
+      // Fetch company
+      const companyRes = await fetch(`/api/companies/${companyId}`);
+      if (!companyRes.ok) throw new Error('Failed to fetch company');
+      const companyData = await companyRes.json();
+      setCompany(companyData);
+      
+      // Fetch feedback for this company
       const params = new URLSearchParams();
+      params.set('companyId', companyId);
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (search) params.set('search', search);
       
-      const res = await fetch(`/api/feedback?${params.toString()}`);
-      if (!res.ok) throw new Error('Failed to fetch feedback');
-      const data = await res.json();
-      setFeedback(data);
+      const feedbackRes = await fetch(`/api/feedback?${params.toString()}`);
+      if (!feedbackRes.ok) throw new Error('Failed to fetch feedback');
+      const feedbackData = await feedbackRes.json();
+      setFeedback(feedbackData);
+      
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, search]);
+  }, [companyId, statusFilter, search]);
 
   useEffect(() => {
-    fetchFeedback();
-  }, [fetchFeedback]);
+    fetchData();
+  }, [fetchData]);
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
@@ -88,7 +102,7 @@ export default function FeedbackPage() {
         body: JSON.stringify({ status }),
       });
       if (!res.ok) throw new Error('Failed to update feedback');
-      await fetchFeedback();
+      await fetchData();
       setSelectedFeedback(null);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to update');
@@ -100,7 +114,7 @@ export default function FeedbackPage() {
     try {
       const res = await fetch(`/api/feedback/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete feedback');
-      await fetchFeedback();
+      await fetchData();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete');
     }
@@ -127,19 +141,60 @@ export default function FeedbackPage() {
 
   const newCount = feedback.filter(f => f.status === 'NEW').length;
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 text-[#586c96] animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !company) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600">{error || 'Company not found'}</p>
+        <Link href="/companies">
+          <Button variant="outline" className="mt-4">
+            Back to Companies
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Feedback</h1>
-          <p className="text-gray-600">
-            View and manage customer feedback from low ratings
-            {newCount > 0 && (
-              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                {newCount} new
-              </span>
+      {/* Header */}
+      <div className="mb-6">
+        <Link 
+          href="/companies" 
+          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Companies
+        </Link>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {company.logo ? (
+              <img src={company.logo} alt={company.name} className="h-16 w-16 rounded-xl object-cover" />
+            ) : (
+              <div className="h-16 w-16 rounded-xl bg-[#f0f3f8] flex items-center justify-center">
+                <Building2 className="h-8 w-8 text-[#586c96]" />
+              </div>
             )}
-          </p>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{company.name} Feedback</h1>
+              <p className="text-gray-600">
+                View and manage customer feedback
+                {newCount > 0 && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                    {newCount} new
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -222,25 +277,12 @@ export default function FeedbackPage() {
 
       {/* Table */}
       <Card>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 text-[#586c96] animate-spin" />
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-600">{error}</p>
-            <Button onClick={fetchFeedback} variant="outline" className="mt-4">
-              Try Again
-            </Button>
-          </div>
-        ) : (
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Company</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Rating</TableHead>
               <TableHead>Feedback</TableHead>
@@ -274,9 +316,6 @@ export default function FeedbackPage() {
                   <a href={`mailto:${item.email}`} className="text-[#586c96] hover:underline">
                     {item.email}
                   </a>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-700">{item.location?.company?.name || 'Unknown'}</span>
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-700">{item.location?.name || 'Unknown'}</span>
@@ -328,13 +367,16 @@ export default function FeedbackPage() {
             ))}
           </TableBody>
         </Table>
-        )}
 
-        {!isLoading && !error && filteredFeedback.length === 0 && (
+        {filteredFeedback.length === 0 && (
           <div className="text-center py-12">
-            <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900">No feedback found</h3>
-            <p className="text-gray-500">Try adjusting your search or filters.</p>
+            <p className="text-gray-500">
+              {search || statusFilter !== 'all' 
+                ? 'Try adjusting your search or filters.' 
+                : 'No feedback has been submitted for this company yet.'}
+            </p>
           </div>
         )}
 
@@ -420,6 +462,9 @@ function FeedbackDetail({
           <a href={`mailto:${feedback.email}`} className="text-sm text-[#586c96] hover:underline">
             {feedback.email}
           </a>
+          {feedback.phone && (
+            <p className="text-sm text-gray-500">{feedback.phone}</p>
+          )}
         </div>
         <Badge variant={statusConfig[feedback.status]?.variant || 'default'}>
           {statusConfig[feedback.status]?.label || feedback.status}
@@ -445,10 +490,6 @@ function FeedbackDetail({
 
       {/* Location */}
       <div className="flex items-center gap-4 text-sm text-gray-600">
-        <div className="flex items-center gap-1">
-          <Building2 className="h-4 w-4" />
-          {feedback.location?.company?.name || 'Unknown'}
-        </div>
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4" />
           {feedback.location?.name || 'Unknown'}

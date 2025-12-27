@@ -1,0 +1,132 @@
+// Widgets Database Schema - Reviews Widget Platform
+// Contains: Widget, WidgetLocation, Review, ReviewOverride, WidgetSummary
+// Connection: WIDGETS_DATABASE_URL (Accelerate) + WIDGETS_DATABASE_URL_DIRECT (migrations)
+// Note: companyId is a soft reference to Core DB (no FK constraint)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client-widgets"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("WIDGETS_DATABASE_URL")
+  directUrl = env("WIDGETS_DATABASE_URL_DIRECT")
+}
+
+// Widget types
+enum WidgetType {
+  CAROUSEL
+  GRID
+  LIST
+  BADGE
+  SLIDER
+  MASONRY
+}
+
+// Widget status
+enum WidgetStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// Widget model - Reviews slider/display widget
+model Widget {
+  id          String       @id @default(cuid())
+  companyId   String       // Soft reference to Core DB Company.id (no FK constraint)
+  name        String
+  type        WidgetType   @default(CAROUSEL)
+  status      WidgetStatus @default(DRAFT)
+  configJson  Json         // Versioned WidgetConfig - source, layout, header, reviews, style, settings
+  embedCode   String?
+  publishedAt DateTime?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations (within widgets DB only)
+  locations WidgetLocation[]
+  summary   WidgetSummary?
+
+  @@index([companyId])
+  @@map("widgets")
+}
+
+// Widget location - Links widget to Google Places (or other providers)
+model WidgetLocation {
+  id        String   @id @default(cuid())
+  widgetId  String
+  provider  String   @default("google") // google, facebook, yelp, etc.
+  placeId   String   // Google Place ID or equivalent
+  label     String?  // Human-readable location name
+  weight    Int      @default(1) // For prioritizing locations
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  widget  Widget   @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+  reviews Review[]
+
+  @@unique([widgetId, placeId])
+  @@map("widget_locations")
+}
+
+// Ingested review from external provider
+model Review {
+  id               String   @id @default(cuid())
+  widgetLocationId String
+  provider         String   @default("google")
+  providerReviewId String   // Unique ID from the provider
+  authorName       String
+  authorAvatarUrl  String?
+  rating           Int      // 1-5
+  text             String?  // Review text (may be null)
+  language         String?
+  reviewUrl        String?
+  reviewCreatedAt  DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  widgetLocation WidgetLocation  @relation(fields: [widgetLocationId], references: [id], onDelete: Cascade)
+  override       ReviewOverride?
+
+  @@unique([provider, providerReviewId])
+  @@index([widgetLocationId])
+  @@map("reviews")
+}
+
+// Review moderation overrides
+model ReviewOverride {
+  id            String   @id @default(cuid())
+  reviewId      String   @unique
+  hidden        Boolean  @default(false)
+  pinned        Boolean  @default(false)
+  customExcerpt String?
+  tags          Json?    // JSON array of tags
+  notes         String?  // Internal notes
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_overrides")
+}
+
+// Cached widget summary for fast payload delivery
+model WidgetSummary {
+  id           String   @id @default(cuid())
+  widgetId     String   @unique
+  avgRating    Float
+  totalReviews Int
+  lastSyncedAt DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  widget Widget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+
+  @@map("widget_summaries")
+}

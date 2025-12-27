@@ -59,6 +59,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [showSourceModal, setShowSourceModal] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [feedbackForm, setFeedbackForm] = useState({
     name: '',
     email: '',
@@ -67,13 +68,19 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
 
   const handleRatingClick = (value: number) => {
     setRating(value);
-    if (value >= 4) {
-      // High rating - show review sources
-      setShowSourceModal(true);
-    } else {
-      // Low rating - show feedback form
-      setStep('feedback');
-    }
+    setIsTransitioning(true);
+    
+    // Show emoji for 1.5 seconds before transitioning
+    setTimeout(() => {
+      if (value >= 4) {
+        // High rating - show review sources
+        setShowSourceModal(true);
+      } else {
+        // Low rating - show feedback form
+        setStep('feedback');
+      }
+      setIsTransitioning(false);
+    }, 1500);
   };
 
   const handleFeedbackSubmit = (e: React.FormEvent) => {
@@ -106,8 +113,8 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
         />
       </a>
 
-      {/* Conditional back-to-locations top-right */}
-      {location.companyLocationsCount > 1 && (
+      {/* Conditional back navigation top-right */}
+      {step === 'rating' && location.companyLocationsCount > 1 && (
         <Link
           href={`/reviews/${location.companySlug}`}
           className="fixed top-4 right-4 sm:top-6 sm:right-6 z-20 inline-flex items-center gap-2 text-gray-200 hover:text-white transition-colors text-xs sm:text-sm"
@@ -116,19 +123,33 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
           Back to locations
         </Link>
       )}
+      {step === 'feedback' && (
+        <button
+          onClick={() => {
+            setStep('rating');
+            setRating(0);
+          }}
+          className="fixed top-4 right-4 sm:top-6 sm:right-6 z-20 inline-flex items-center gap-2 text-gray-200 hover:text-white transition-colors text-xs sm:text-sm"
+        >
+          <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+          Back to rating
+        </button>
+      )}
 
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-xl">
 
           {step === 'rating' && (
-            <Card className="px-6 py-8 sm:px-12 sm:py-14 bg-white border border-gray-200 shadow-lg rounded-2xl">
+            <Card className="px-10 py-8 sm:px-20 sm:py-14 bg-white border border-gray-200 shadow-lg rounded-2xl">
               <div className="flex flex-col items-center text-center mb-6 sm:mb-10">
                 {location.companyLogo ? (
-                  <img
-                    src={location.companyLogo}
-                    alt={location.companyName}
-                    className="h-24 sm:h-48 w-auto mb-2"
-                  />
+                  <div className="mb-4 w-[200px] h-[200px] rounded-full border-8 border-gray-100 bg-white flex items-center justify-center overflow-hidden">
+                    <img
+                      src={location.companyLogo}
+                      alt={location.companyName}
+                      className="max-h-[140px] max-w-[140px] object-contain"
+                    />
+                  </div>
                 ) : (
                   <div className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{location.companyName}</div>
                 )}
@@ -139,7 +160,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                 <p className="text-sm sm:text-base text-gray-600 mt-1">Please rate your experience</p>
               </div>
 
-              <div className="flex justify-center gap-1 sm:gap-3" role="group" aria-label="Rating">
+              <div className="flex justify-center gap-2 sm:gap-4" role="group" aria-label="Rating">
                 {[1, 2, 3, 4, 5].map((value) => (
                   <button
                     key={value}
@@ -154,7 +175,7 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
                   >
                     <Star
                       className={cn(
-                        'h-12 w-12 sm:h-16 sm:w-16 transition-colors',
+                        'h-14 w-14 sm:h-20 sm:w-20 transition-colors',
                         (hoveredRating || rating) >= value
                           ? 'fill-yellow-400 text-yellow-400'
                           : 'text-gray-300'
@@ -187,53 +208,83 @@ export function ReviewFlowClient({ location, sources }: ReviewFlowClientProps) {
           )}
 
           {step === 'feedback' && (
-            <Card className="p-6 sm:p-8 bg-white/10 backdrop-blur-sm border border-white/20">
-              <h2 className="text-lg sm:text-xl font-semibold text-white text-center mb-2">
-                We&apos;re sorry to hear that
-              </h2>
-              <p className="text-gray-300 text-center mb-6">
-                Please let us know how we can improve
-              </p>
-              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-                <Input
-                  label="Name"
-                  value={feedbackForm.name}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
-                  required
-                  className="bg-white/10 border-white/20 text-white placeholder-gray-400"
-                />
-                <Input
-                  label="Email"
-                  type="email"
-                  value={feedbackForm.email}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
-                  required
-                  className="bg-white/10 border-white/20 text-white placeholder-gray-400"
-                />
+            <Card className="px-10 py-8 sm:px-16 sm:py-12 bg-white border border-gray-200 shadow-lg rounded-2xl">
+              {/* Company Logo */}
+              <div className="flex flex-col items-center text-center mb-6">
+                {location.companyLogo ? (
+                  <div className="mb-4 w-[200px] h-[200px] rounded-full border-8 border-gray-100 bg-white flex items-center justify-center overflow-hidden">
+                    <img
+                      src={location.companyLogo}
+                      alt={location.companyName}
+                      className="max-h-[140px] max-w-[140px] object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">{location.companyName}</div>
+                )}
+                <p className="text-gray-600">
+                  We value your feedback and would love to hear from you.
+                </p>
+              </div>
+
+              <form onSubmit={handleFeedbackSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="feedback-message" className="block text-sm font-medium text-gray-300 mb-1">
-                    Message
+                  <label htmlFor="feedback-name" className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="feedback-name"
+                    type="text"
+                    value={feedbackForm.name}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, name: e.target.value })}
+                    required
+                    placeholder="John Doe"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="feedback-email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="feedback-email"
+                    type="email"
+                    value={feedbackForm.email}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, email: e.target.value })}
+                    required
+                    placeholder="john@example.com"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="feedback-message" className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Message <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     id="feedback-message"
                     value={feedbackForm.message}
-                    onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
-                    rows={4}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 2000) {
+                        setFeedbackForm({ ...feedbackForm, message: e.target.value });
+                      }
+                    }}
+                    rows={5}
                     required
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ee5f64]"
+                    maxLength={2000}
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#586c96] focus:border-transparent resize-none"
                     placeholder="Tell us about your experience..."
                   />
+                  <div className="text-right text-sm text-gray-400 mt-1">
+                    {feedbackForm.message.length} / 2000 characters
+                  </div>
                 </div>
-                <Button type="submit" className="w-full">
+
+                <Button type="submit" className="w-full bg-[#586c96] hover:bg-[#4a5d82] text-white py-3 rounded-lg font-medium">
                   Submit Feedback
                 </Button>
               </form>
-              <button
-                onClick={() => setStep('rating')}
-                className="w-full mt-4 text-sm text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 rounded py-1"
-              >
-                ← Change rating
-              </button>
             </Card>
           )}
         </div>

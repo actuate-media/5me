@@ -4,17 +4,19 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "build": "npm run prisma:generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:migrate:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio",
+    "postinstall": "npm run prisma:generate",
+    "prisma:generate": "prisma generate --schema=prisma/schema-core.prisma && prisma generate --schema=prisma/schema-widgets.prisma",
+    "db:push": "prisma db push --schema=prisma/schema-core.prisma && prisma db push --schema=prisma/schema-widgets.prisma",
+    "db:migrate": "prisma migrate dev --schema=prisma/schema-core.prisma && prisma migrate dev --schema=prisma/schema-widgets.prisma",
+    "db:migrate:deploy": "prisma migrate deploy --schema=prisma/schema-core.prisma && prisma migrate deploy --schema=prisma/schema-widgets.prisma",
+    "db:studio:core": "prisma studio --schema=prisma/schema-core.prisma",
+    "db:studio:widgets": "prisma studio --schema=prisma/schema-widgets.prisma",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
-    "db:validate": "prisma validate && prisma db pull --force"
+    "db:validate": "prisma validate --schema=prisma/schema-core.prisma && prisma validate --schema=prisma/schema-widgets.prisma"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

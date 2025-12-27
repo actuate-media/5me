@@ -60,7 +60,7 @@ export function StarfieldBackground() {
     for (let i = 0; i < STAR_COUNT; i++) {
       const x = Math.random() * canvas.width;
       const y = Math.random() * canvas.height;
-      const radius = Math.random() * 1.8 + 0.6;
+      const radius = Math.random() * 7.2 + 2.4;
       stars.push({
         x,
         y,

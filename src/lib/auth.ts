@@ -6,6 +6,20 @@ import type { UserRole } from '@/types';
 // Superadmin email (hardcoded)
 const SUPERADMIN_EMAIL = 'strategize@actuatemedia.com';
 
+// Dev mode bypass - set to true to skip auth in development
+const DEV_AUTH_BYPASS = process.env.NODE_ENV === 'development' && process.env.DEV_AUTH_BYPASS === 'true';
+
+// Mock session for dev mode
+const DEV_SESSION = {
+  user: {
+    id: 'dev-user-id',
+    email: SUPERADMIN_EMAIL,
+    name: 'Dev User',
+    role: 'SUPERADMIN' as UserRole,
+  },
+  expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+};
+
 // Function to get or create user and return role
 async function getOrCreateUserRole(email: string, name?: string | null, avatar?: string | null): Promise<UserRole> {
   const normalizedEmail = email.toLowerCase();
@@ -44,7 +58,7 @@ async function getOrCreateUserRole(email: string, name?: string | null, avatar?:
   }
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+const { handlers, signIn, signOut, auth: authOriginal } = NextAuth({
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -124,3 +138,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: 'jwt',
   },
 });
+
+// Export auth with dev bypass wrapper
+const authWithDevBypass = DEV_AUTH_BYPASS 
+  ? async () => DEV_SESSION 
+  : authOriginal;
+
+export { handlers, signIn, signOut, authWithDevBypass as auth };

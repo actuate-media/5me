@@ -64,6 +64,7 @@ export async function getAllFeedback(filters?: {
       },
     },
     orderBy: { createdAt: 'desc' },
+    take: 500,
   });
 
   return feedback;
