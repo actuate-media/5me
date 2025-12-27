@@ -1,7 +1,7 @@
 # 5me - Review Management Platform
 
 ## Architecture Overview
-Next.js 15 (App Router + Turbopack) • React 19 • TypeScript • Prisma 5 • PostgreSQL • NextAuth v5 (Google OAuth, `@actuatemedia.com` domain only)
+Next.js 16 (App Router + Turbopack) • React 19 • TypeScript • Prisma 5 • PostgreSQL • NextAuth v5 (Google OAuth, `@actuatemedia.com` domain only)
 
 **Data flow**: Company → Location → ReviewSource. Customers visit `/reviews/[companySlug]/[locationSlug]` to rate; ≥4 stars shows review platforms, <4 stars captures private feedback.
 
@@ -21,7 +21,7 @@ src/
 
 ## Critical Patterns
 
-### API Routes (Next.js 15 - REQUIRED)
+### API Routes (Next.js 16 - REQUIRED)
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';

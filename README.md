@@ -12,7 +12,7 @@ A Next.js-based review management platform for collecting customer reviews and r
 
 ## Tech Stack
 
-- **Next.js 15** - App Router with Turbopack
+- **Next.js 16** - App Router with Turbopack
 - **React 19** - Modern React with Server Components
 - **TypeScript** - Strict type-safe development
 - **Prisma 5** - Type-safe database ORM
