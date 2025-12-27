@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: '5me - Review Management Platform',
   description: 'Collect, manage, and display customer reviews from multiple sources.',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.svg',
   },
 };
 
