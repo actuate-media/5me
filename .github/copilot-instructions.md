@@ -1,34 +1,37 @@
 # 5me - Review Management Platform
 
 ## Architecture Overview
-Next.js 15 (App Router with Turbopack) + React 19 + TypeScript + Prisma 5 + PostgreSQL. Auth via NextAuth v5 with Google OAuth, restricted to `@actuatemedia.com` domain.
+Next.js 15 (App Router + Turbopack) • React 19 • TypeScript • Prisma 5 • PostgreSQL • NextAuth v5 (Google OAuth, `@actuatemedia.com` domain only)
 
-**Data hierarchy**: Company → Location → ReviewSource. Customers visit `/reviews/[companySlug]/[locationSlug]` to rate; ≥4 stars shows review sources, <4 stars captures feedback.
+**Data flow**: Company → Location → ReviewSource. Customers visit `/reviews/[companySlug]/[locationSlug]` to rate; ≥4 stars shows review platforms, <4 stars captures private feedback.
 
 ## Project Structure
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── (dashboard)/        # Protected admin routes (route group)
-│   ├── api/                # RESTful API routes, nested by resource
-│   ├── login/              # Public auth pages
-│   └── reviews/[companySlug]/[locationSlug]/  # Public review flow
-├── components/
-│   ├── ui/                 # Primitives: Button, Card, Input, Modal, Table
-│   └── layout/             # DashboardNav, DashboardHeader
-├── lib/                    # auth.ts, prisma.ts, utils.ts
-├── services/               # Server-side (.ts) + Client-side (.service.ts)
-└── types/index.ts          # All TypeScript interfaces
+├── app/
+│   ├── (dashboard)/           # Protected admin routes (route group, 'use client' pages)
+│   ├── api/                   # RESTful routes, nested: /companies/[id]/locations/[locationId]
+│   ├── reviews/[companySlug]/[locationSlug]/  # Public review flow (Server + Client split)
+│   └── login/                 # Public auth
+├── components/ui/             # Barrel export: Button, Card, Input, Modal, Table, Badge
+├── lib/                       # auth.ts, prisma.ts, utils.ts (cn function)
+├── services/                  # Server (.ts) vs Client (.service.ts) — see below
+└── types/index.ts             # All TypeScript interfaces
 ```
 
 ## Critical Patterns
 
-### API Routes (Next.js 15 - Async Params)
-Route params are **Promises** in Next.js 15. Always await:
+### API Routes (Next.js 15 - REQUIRED)
 ```typescript
-interface RouteParams { params: Promise<{ id: string }> }
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';  // Always add this
+
+interface RouteParams { params: Promise<{ id: string }> }  // Params are Promises!
+
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { id } = await params;
+  const { id } = await params;  // Must await
   const session = await auth();
   if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // ...
@@ -36,83 +39,105 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 ```
 
 ### Services Layer (Two Patterns)
-1. **Server-side** (`services/companies.ts`): Direct Prisma calls → used in API routes
-2. **Client-side** (`services/company.service.ts`): Axios to `/api/*` → used in `'use client'` components
+| Type | Location | Usage | Example |
+|------|----------|-------|---------|
+| Server | `services/companies.ts` | Direct Prisma in API routes | `getAllCompanies()` |
+| Client | `services/company.service.ts` | Axios to `/api/*` in `'use client'` | `companyService.getCompanies()` |
 
-### Client vs Server Components
-- **Server Components**: Dashboard pages (async, call `auth()` directly)
-- **Client Components**: Add `'use client'` + separate file (e.g., `review-flow-client.tsx`)
-- **error.tsx must be Client Component**, loading.tsx should be Server Component
+### Component Pattern
+```typescript
+// Dashboard pages: 'use client' + fetch from /api
+// See: src/app/(dashboard)/companies/page.tsx
+
+// Public review flow: Server Component fetches → passes to Client Component
+// See: src/app/reviews/[companySlug]/[locationSlug]/page.tsx → review-flow-client.tsx
+```
 
 ### UI Components
-Import from barrel: `import { Button, Card, Input } from '@/components/ui'`
-- `forwardRef` pattern with variant/size props
-- Use `cn()` from `@/lib/utils` for conditional Tailwind classes
+```typescript
+import { Button, Card, Input, Modal } from '@/components/ui';  // Barrel import
+import { cn } from '@/lib/utils';  // Tailwind class merging
+
+// Components use forwardRef + variant/size props
+<Button variant="primary" size="md" isLoading={loading}>Save</Button>
+```
 
 ## Database Patterns
 
-### Query Safety
 ```typescript
-// ✅ Always use take limits on findMany
+// ✅ Always limit findMany
 await prisma.company.findMany({ take: 100 });
 
-// ✅ Use select for specific fields (not include for large relations)
-await prisma.company.findMany({ select: { id: true, name: true } });
+// ✅ Use select for specific fields
+await prisma.reviewSource.findMany({ where: { locationId }, select: { id: true, type: true, name: true, url: true }, take: 20 });
 
-// ❌ Avoid queries inside loops (N+1 problem)
-for (const id of ids) { await prisma.find... }  // BAD
+// ❌ Never query in loops
+for (const id of ids) { await prisma.find... }  // N+1
 await prisma.findMany({ where: { id: { in: ids } } });  // GOOD
-```
 
-### Prisma Error Handling
-```typescript
-catch (error: unknown) {
-  if (error && typeof error === 'object' && 'code' in error) {
-    if (error.code === 'P2002') return 400; // Unique constraint
-    if (error.code === 'P2025') return 404; // Not found
-  }
+// Prisma error handling
+if (error && typeof error === 'object' && 'code' in error) {
+  if (error.code === 'P2002') return 400;  // Unique constraint
+  if (error.code === 'P2025') return 404;  // Not found
 }
 ```
 
-## Security Checklist
-- [ ] All API routes check `await auth()` first
-- [ ] User input validated (consider Zod schemas)
-- [ ] No `console.log` in production code
-- [ ] No hardcoded URLs/secrets
-- [ ] `findMany` has `take` limits
-- [ ] API routes have `export const dynamic = 'force-dynamic'`
+## Auth & Security
+- Google OAuth only, domain: `@actuatemedia.com`
+- Superadmin: `strategize@actuatemedia.com` (hardcoded in `src/lib/auth.ts`)
+- User upsert on login, session includes `user.role`: `SUPERADMIN | ADMIN | USER`
+- Middleware protects: `/dashboard`, `/companies`, `/feedback`, `/widgets`, `/settings`
+- **Every API route**: check `await auth()` first, return 401 if no session
 
-> **See Also:** [CODE_QUALITY.md](.github/CODE_QUALITY.md) for quick reference, [AI_CODE_QUALITY_ASSURANCE.md](.github/AI_CODE_QUALITY_ASSURANCE.md) for comprehensive patterns.
+## Pre-Deployment Checklist
+Before deploying, verify:
+```bash
+npm run build         # Must pass without errors
+npm run lint          # No lint errors
+npx prisma validate   # Schema valid
+```
 
-## Dev Guides (`.github/`)
-| Doc | Focus |
-|-----|-------|
-| [01-nextjs.md](.github/01-nextjs.md) | App Router, caching, Server Actions |
-| [02-typescript.md](.github/02-typescript.md) | Strict mode, Zod validation |
-| [03-prisma-postgres.md](.github/03-prisma-postgres.md) | Schema, migrations, performance |
-| [04-authjs.md](.github/04-authjs.md) | NextAuth v5, session handling |
-| [05-tailwind-shadcn.md](.github/05-tailwind-shadcn.md) | UI components, styling |
-| [09-security.md](.github/09-security.md) | Security baseline |
-| [10-repo-structure.md](.github/10-repo-structure.md) | Folder structure |
+**Manual checks** (see [AI_CODE_QUALITY_ASSURANCE.md](AI_CODE_QUALITY_ASSURANCE.md)):
+- [ ] No `console.log()` in production code
+- [ ] All API routes have `export const dynamic = 'force-dynamic'`
+- [ ] All `findMany()` calls have `take` limits
+- [ ] No hardcoded URLs or secrets
+- [ ] Database migrations applied: `npm run db:migrate:deploy`
+
+## Vercel Deployment
+**Required env vars** (set in Vercel dashboard):
+- `PRISMA_CORE` - PostgreSQL connection (use pooled URL from Neon/Supabase)
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- `AUTH_SECRET` - generate with `openssl rand -base64 32`
+- `NEXTAUTH_URL` - production URL (e.g., `https://5me.vercel.app`)
+
+**Build settings**: Auto-detected. `npm run build` runs `prisma generate && next build`.
 
 ## Commands
 ```bash
-npm run dev          # Start with Turbopack
-npm run build        # prisma generate && next build
-npm run db:push      # Push schema (no migration history)
-npm run db:migrate   # Create migration
-npm run db:studio    # Prisma Studio GUI
+npm run dev           # Start with Turbopack (port 3000)
+npm run build         # prisma generate && next build
+npm run db:migrate    # Create migration (prompts for name)
+npm run db:push       # Push schema without migration
+npm run db:studio     # Prisma Studio GUI
+npm run db:seed       # Run prisma/seed.ts
+npm run db:reset      # Reset DB + seed (destructive!)
 ```
 
 ## Conventions
 - Path alias: `@/` → `src/`
 - Type imports: `import type { Company } from '@/types'`
-- Components: PascalCase (`Button.tsx`)
-- Prisma schema: `prisma/schema.prisma`, connection via `PRISMA_CORE` env var
-- Slugs: Company globally unique; Location unique within company
+- Prisma connection: `PRISMA_CORE` env var
+- Slugs: Company globally unique; Location unique within company (`@@unique([companyId, slug])`)
+- Icons: `lucide-react` (e.g., `Building2`, `MapPin`, `Plus`)
 
-## Auth
-- Google OAuth only, domain: `@actuatemedia.com`
-- Superadmin: `strategize@actuatemedia.com`
-- User upsert on login, session includes `user.role`
-- Middleware protects: `/dashboard`, `/companies`, `/feedback`, `/widgets`, `/settings`
+## Key Files Reference
+| Pattern | Reference File |
+|---------|----------------|
+| API route structure | [src/app/api/companies/[id]/route.ts](src/app/api/companies/[id]/route.ts) |
+| Server service | [src/services/companies.ts](src/services/companies.ts) |
+| Client service | [src/services/company.service.ts](src/services/company.service.ts) |
+| UI component | [src/components/ui/Button.tsx](src/components/ui/Button.tsx) |
+| Server→Client split | [src/app/reviews/[companySlug]/[locationSlug]/page.tsx](src/app/reviews/[companySlug]/[locationSlug]/page.tsx) |
+
+> **Deep dives**: See `.github/` docs for [NextJS](01-nextjs.md), [TypeScript](02-typescript.md), [Prisma](03-prisma-postgres.md), [Auth](04-authjs.md), [Security](09-security.md)
